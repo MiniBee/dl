@@ -2,9 +2,6 @@
 *.temp
 /vendor
 .project
-*/data/
-*/__pycache__/
-/*/model/*
 *model*
 output/
 data/
