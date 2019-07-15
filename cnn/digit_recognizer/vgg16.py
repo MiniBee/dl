@@ -24,7 +24,8 @@ class Model():
             with tf.variable_scope("block%d"%blockID):
                 for itr in range(n_conv):
                     net = tf.layers.conv2d(net, 
-                                           n_chl, 3, 
+                                           n_chl, 3,
+
                                            activation=tf.nn.relu, 
                                            padding="same")
                 net = tf.layers.max_pooling2d(net, 2, 2)

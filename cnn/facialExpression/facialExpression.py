@@ -86,11 +86,11 @@ if __name__ == '__main__':
     best_accuracy = 0.0
     for epoch in range(20000):
         print('epoch ... {}'.format(epoch))
-        train_pic, train_to = data.next_batch(64, True)
-        train_pic = np.array([np.reshape([x], [48, 48, 1]) for x in train_pic])
-        train_to = np.array([x for x in train_to])
+        train_pic, train_to = data.next_batch(1000, True)
         print(train_pic.shape)
         print(train_to.shape)
+        train_pic = np.array([np.reshape([x], [48, 48, 1]) for x in train_pic])
+        train_to = np.array([x for x in train_to])
         model.sess.run(model.step, feed_dict={model.inputs: train_pic, model.target_onehot: train_to})
         # print(model.sess.run(model.inputs, feed_dict={model.inputs: train_pic}))
         # print(model.sess.run(model.target_onehot, feed_dict={model.target_onehot: train_to}))
