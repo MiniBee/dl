@@ -64,27 +64,43 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
+    train_model = False
     train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train_test.csv'
     train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train.csv'
-    # test_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/test_test.csv'
-    # test_x = get_test(test_path)
     train_x, train_y = get_train(train_path)
     train_x = train_x / 255
     train_data = Dataset(train_x, train_y)
     model = vgg16.Model()
     best_accuracy = 0.0
-    for i in range(1000):
-        pic_x, pic_y = train_data.next_batch(64)
-        pic_y = pic_y.reshape(pic_y.shape[0], 10)
-        # training ...
-        model.sess.run(model.step, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
-        accuracy = model.sess.run(model.accuracy, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
-        if i % 10 == 0:
-            print('accuracy' + str(i) + ': ', accuracy)
-        if accuracy - best_accuracy > 0.03:
-            best_accuracy = accuracy
-            model.saver.save(model.sess, './model/my-model', global_step=111)
-    print(best_accuracy)
+    if train_model:
+        for i in range(1000):
+            pic_x, pic_y = train_data.next_batch(64)
+            pic_y = pic_y.reshape(pic_y.shape[0], 10)
+            # training ...
+            model.sess.run(model.step, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
+            accuracy = model.sess.run(model.accuracy, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
+            if i % 10 == 0:
+                print('accuracy' + str(i) + ': ', accuracy)
+            if accuracy - best_accuracy > 0.03:
+                best_accuracy = accuracy
+                model.saver.save(model.sess, './model/my-model', global_step=111)
+        print(best_accuracy)
+    else:
+        test_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/test_test.csv'
+        # 28000
+        test_x = get_test(test_path)
+        test_y_pred = []
+        model.init_sess('./model/my-model')
+        # 每次预测100个
+        start = 0
+        for i in range(280):
+            end = i * 100
+            pic_x = test_x[start:end]
+            start = end
+            model.sess.run(model.y_pred, feed_dict={model.inputs: pic_x})
+            pic_y = model.y_pred
+            test_y_pred.extend(pic_y)
+
 
 
 

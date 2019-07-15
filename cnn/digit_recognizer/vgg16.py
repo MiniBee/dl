@@ -11,7 +11,7 @@ class Model():
         self.batch_size = batch_size 
         self.is_training = is_training
         self.build_model()
-        self.init_sess() 
+        self.init_sess()
     def build_model(self):
         """
         构建计算图
@@ -46,7 +46,7 @@ class Model():
             net = tf.layers.dense(net, 1024, activation=tf.nn.relu)
             net = tf.layers.dense(net, 1024, activation=tf.nn.relu)
             self.logits = tf.layers.dense(net, 10, activation=None)
-            # self.y_pred = tf.nn.softmax(self.logits)
+            self.y_pred = tf.nn.softmax(self.logits)
 
             # 计算loss函数
             self.loss = tf.nn.softmax_cross_entropy_with_logits_v2(
