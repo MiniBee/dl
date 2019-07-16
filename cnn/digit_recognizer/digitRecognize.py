@@ -82,7 +82,7 @@ if __name__ == '__main__':
             loss = model.sess.run(model.loss, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
             if i % 10 == 0:
                 print('accuracy' + str(i) + ': ', accuracy)
-                print('loss' + str(i) + ': ', )
+                print('loss' + str(i) + ': ', loss)
             if accuracy - best_accuracy > 0.03:
                 best_accuracy = accuracy
                 model.saver.save(model.sess, './model/my-model', global_step=111)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         data['ImageId'] = list(range(1, 28001))
         data['Label'] = test_y_pred
         print(data.head())
-        data.to_csv('ret.csv', index=False)
+        data.to_csv('./ret.csv', index=False)
 
 
 
