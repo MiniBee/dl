@@ -49,7 +49,7 @@ class Model():
             correct_prediction = tf.equal(tf.argmax(self.logits, 1), tf.argmax(self.labels, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-            self.step = tf.train.AdamOptimizer(0.0001).minimize(self.loss)
+            self.step = tf.train.AdamOptimizer(0.00001).minimize(self.loss)
             self.all_var = tf.global_variables()
             self.init = tf.global_variables_initializer()
             self.saver = tf.train.Saver()

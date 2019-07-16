@@ -83,7 +83,7 @@ if __name__ == '__main__':
             if i % 10 == 0:
                 print('accuracy' + str(i) + ': ', accuracy)
                 print('loss' + str(i) + ': ', loss)
-            if accuracy - best_accuracy > 0.03:
+            if accuracy - best_accuracy > 0:
                 best_accuracy = accuracy
                 model.saver.save(model.sess, './model/my-model', global_step=111)
         print(best_accuracy)

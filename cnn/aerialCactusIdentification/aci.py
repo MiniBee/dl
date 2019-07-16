@@ -22,8 +22,8 @@ def load_pic(path):
         pic_path = path + file_name
         pic_list.append(cv.imread(pic_path))
         name_list.append(file_name)
-        if i > 200:
-            break
+        # if i > 200:
+        #     break
     return np.array(pic_list), np.array(name_list)
 
 
@@ -67,10 +67,12 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
-    train_model = True
-    train_label_ = '/data/phy/datas/aerial-cactus-identification/train.csv'
+    train_model = False
+    train_label_ = '/home/peihongyue/project/python/dl/data/aerial-cactus-identification/train.csv'
     train_pic_ = '/data/phy/datas/aerial-cactus-identification/train/'
+    train_pic_ = '/home/peihongyue/project/python/dl/data/aerial-cactus-identification/train/'
     test_pic_ = '/data/phy/datas/aerial-cactus-identification/test/'
+    test_pic_ = '/home/peihongyue/project/python/dl/data/aerial-cactus-identification/test/'
     pic_array, name_array = load_pic(train_pic_)
     label_dict = get_label(train_label_)
     label_array = np.array([label_dict[i] for i in name_array])
@@ -90,7 +92,7 @@ if __name__ == '__main__':
             if i % 10 == 0:
                 print('accuracy' + str(i) + ': ', accuracy)
                 print('loss' + str(i) + ': ', loss)
-            if accuracy - best_accuracy > 0.03:
+            if accuracy - best_accuracy > 0:
                 best_accuracy = accuracy
                 model.saver.save(model.sess, './model/my-model', global_step=111)
         print(best_accuracy)
@@ -106,10 +108,10 @@ if __name__ == '__main__':
             pic_x = test_x[start:end]
             start = end
             print(pic_x.shape)
-            pic_y = model.sess.run(model.y_pred, feed_dict={model.inputs: pic_x})
+            pic_y = model.sess.run(model.logits, feed_dict={model.inputs: pic_x})
             pic_y = [1 - list(i).index(max(i)) for i in pic_y]
             test_y_pred.extend(list(pic_y))
-        print(test_y_pred)
+        print(len(test_y_pred))
         data = pd.DataFrame()
         data['id'] = list(range(1, 4001))
         data['has_cacus'] = test_y_pred
