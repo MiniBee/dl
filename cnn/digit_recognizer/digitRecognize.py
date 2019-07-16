@@ -79,8 +79,10 @@ if __name__ == '__main__':
             # training ...
             model.sess.run(model.step, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
             accuracy = model.sess.run(model.accuracy, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
+            loss = model.sess.run(model.loss, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
             if i % 10 == 0:
                 print('accuracy' + str(i) + ': ', accuracy)
+                print('loss' + str(i) + ': ', )
             if accuracy - best_accuracy > 0.03:
                 best_accuracy = accuracy
                 model.saver.save(model.sess, './model/my-model', global_step=111)

@@ -25,10 +25,10 @@ class Model():
                 for itr in range(n_conv):
                     net = tf.layers.conv2d(net, 
                                            n_chl, 3,
-
                                            activation=tf.nn.relu, 
                                            padding="same")
                 net = tf.layers.max_pooling2d(net, 2, 2)
+                net = tf.layers.batch_normalization(net)
             return net 
         with self.graph.as_default():
             # 人脸数据
@@ -40,12 +40,13 @@ class Model():
             self.target_onehot = tf.placeholder(dtype=tf.float32, shape=[None, 10], name="target_onehot")
             net = block(self.inputs, 2, 64, 1)
             net = block(net, 2, 128, 2)
-            # net = block(net, 2, 256, 3)
+            net = block(net, 1, 256, 3)
             # net = block(net, 2, 512, 4)
             # net = block(net, 2, 512, 5)
             net = tf.layers.flatten(net)
-            net = tf.layers.dense(net, 1024, activation=tf.nn.relu)
-            net = tf.layers.dense(net, 1024, activation=tf.nn.relu)
+            net = tf.layers.batch_normalization(net)
+            net = tf.layers.dense(net, 512, activation=tf.nn.relu)
+            # net = tf.layers.dense(net, 1024, activation=tf.nn.relu)
             self.logits = tf.layers.dense(net, 10, activation=None)
             self.y_pred = tf.nn.softmax(self.logits)
 
