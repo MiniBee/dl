@@ -64,17 +64,17 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
-    train_model = False
+    train_model = True
     # train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train_test.csv'
     train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train.csv'
     train_x, train_y = get_train(train_path)
     train_x = train_x / 255
     train_data = Dataset(train_x, train_y)
     model = vgg16.Model()
-    best_accuracy = 0.0
+    best_loss = 0.0
     if train_model:
         for i in range(4000):
-            pic_x, pic_y = train_data.next_batch(64)
+            pic_x, pic_y = train_data.next_batch(1000)
             pic_y = pic_y.reshape(pic_y.shape[0], 10)
             # training ...
             model.sess.run(model.step, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
@@ -83,8 +83,8 @@ if __name__ == '__main__':
             if i % 10 == 0:
                 print('accuracy' + str(i) + ': ', accuracy)
                 print('loss' + str(i) + ': ', loss)
-            if accuracy - best_accuracy > 0:
-                best_accuracy = accuracy
+            if loss - best_loss > 0:
+                best_loss = loss
                 model.saver.save(model.sess, './model/my-model', global_step=111)
         print(best_accuracy)
     else:
