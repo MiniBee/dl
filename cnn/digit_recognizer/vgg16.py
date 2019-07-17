@@ -16,7 +16,7 @@ class Model():
         """
         构建计算图
         """
-        self.graph = tf.Graph() 
+        self.graph = tf.Graph()
         def block(net, n_conv, n_chl, blockID):
             """
             定义多个CNN组合单元
@@ -29,7 +29,7 @@ class Model():
                                            padding="same")
                 net = tf.layers.max_pooling2d(net, 2, 2)
                 net = tf.layers.batch_normalization(net)
-            return net 
+            return net
         with self.graph.as_default():
             # 人脸数据
             self.inputs = tf.placeholder(dtype=tf.float32, shape=[None, 28, 28, 1], name="inputs")

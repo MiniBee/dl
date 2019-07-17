@@ -74,16 +74,17 @@ if __name__ == '__main__':
     test_pic_ = '/data/phy/datas/aerial-cactus-identification/test/'
     test_pic_ = '/home/peihongyue/project/python/dl/data/aerial-cactus-identification/test/'
     pic_array, name_array = load_pic(train_pic_)
+    pic_array = pic_array / 255
     label_dict = get_label(train_label_)
     label_array = np.array([label_dict[i] for i in name_array])
     print(pic_array.shape)
     print(label_array.shape)
     dataset = Dataset(pic_array, name_array)
     model = conv.Model(32, 32, 2)
-    best_accuracy = 0.0
+    best_loss = 0.0
     if train_model:
-        for i in range(20000):
-            pic_x, pic_y = dataset.next_batch(128)
+        for i in range(40000):
+            pic_x, pic_y = dataset.next_batch(64)
             pic_y = np.array([label_dict[i] for i in pic_y])
             pic_y = np.array([[1, 0] if i == 1 else [0, 1] for i in pic_y])
             model.sess.run(model.step, feed_dict={model.inputs: pic_x, model.labels: pic_y})
@@ -92,12 +93,13 @@ if __name__ == '__main__':
             if i % 10 == 0:
                 print('accuracy' + str(i) + ': ', accuracy)
                 print('loss' + str(i) + ': ', loss)
-            if accuracy - best_accuracy > 0:
-                best_accuracy = accuracy
+            if loss - best_loss > 0:
+                best_loss = loss
                 model.saver.save(model.sess, './model/my-model', global_step=111)
-        print(best_accuracy)
+        print(best_loss)
     else:
         test_x, test_name = load_pic(test_pic_)
+        test_x = test_x / 255
         test_y_pred = []
         model.init_sess('./model/my-model-111')
         # 每次预测100个
@@ -114,7 +116,7 @@ if __name__ == '__main__':
         print(len(test_y_pred))
         data = pd.DataFrame()
         data['id'] = list(range(1, 4001))
-        data['has_cacus'] = test_y_pred
+        data['has_cactus'] = test_y_pred
         print(data.head())
         data.to_csv('./ret.csv', index=False)
 

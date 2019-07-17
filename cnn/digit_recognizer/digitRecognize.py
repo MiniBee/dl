@@ -64,8 +64,8 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
-    train_model = False
-    train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train_test.csv'
+    train_model = True
+    # train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train_test.csv'
     train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train.csv'
     train_x, train_y = get_train(train_path)
     train_x = train_x / 255
@@ -73,8 +73,8 @@ if __name__ == '__main__':
     model = vgg16.Model()
     best_accuracy = 0.0
     if train_model:
-        for i in range(1000):
-            pic_x, pic_y = train_data.next_batch(1000)
+        for i in range(40000):
+            pic_x, pic_y = train_data.next_batch(64)
             pic_y = pic_y.reshape(pic_y.shape[0], 10)
             # training ...
             model.sess.run(model.step, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
@@ -91,6 +91,7 @@ if __name__ == '__main__':
         test_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/test.csv'
         # 28000
         test_x = get_test(test_path)
+        test_x = test_x / 255
         test_y_pred = []
         model.init_sess('./model/my-model-111')
         # 每次预测100个
