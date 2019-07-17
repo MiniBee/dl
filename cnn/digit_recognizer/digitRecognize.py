@@ -64,7 +64,7 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
-    train_model = True
+    train_model = False
     # train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train_test.csv'
     train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train.csv'
     train_x, train_y = get_train(train_path)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     model = vgg16.Model()
     best_accuracy = 0.0
     if train_model:
-        for i in range(40000):
+        for i in range(4000):
             pic_x, pic_y = train_data.next_batch(64)
             pic_y = pic_y.reshape(pic_y.shape[0], 10)
             # training ...
