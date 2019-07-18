@@ -73,8 +73,8 @@ if __name__ == '__main__':
     model = vgg16.Model()
     best_loss = 0.0
     if train_model:
-        for i in range(4000):
-            pic_x, pic_y = train_data.next_batch(1000)
+        for i in range(2000):
+            pic_x, pic_y = train_data.next_batch(500)
             pic_y = pic_y.reshape(pic_y.shape[0], 10)
             # training ...
             model.sess.run(model.step, feed_dict={model.inputs: pic_x, model.target_onehot: pic_y})
@@ -86,7 +86,7 @@ if __name__ == '__main__':
             if loss - best_loss > 0:
                 best_loss = loss
                 model.saver.save(model.sess, './model/my-model', global_step=111)
-        print(best_accuracy)
+        print(best_loss)
     else:
         test_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/test.csv'
         # 28000
