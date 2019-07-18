@@ -41,6 +41,7 @@ class Model():
             net = tf.layers.batch_normalization(net)
             net = tf.layers.dense(net, 512, activation=tf.nn.relu)
             net = tf.layers.dense(net, 512, activation=tf.nn.relu)
+            net = tf.layers.dropout(net, 0.5)
             self.logits = tf.layers.dense(net, self.y_dim, activation=tf.nn.softmax)
 
             self.loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=self.labels, logits=self.logits)
@@ -49,7 +50,7 @@ class Model():
             correct_prediction = tf.equal(tf.argmax(self.logits, 1), tf.argmax(self.labels, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-            self.step = tf.train.AdamOptimizer(0.00001).minimize(self.loss)
+            self.step = tf.train.AdamOptimizer(0.0001).minimize(self.loss)
             self.all_var = tf.global_variables()
             self.init = tf.global_variables_initializer()
             self.saver = tf.train.Saver()
