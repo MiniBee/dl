@@ -57,7 +57,7 @@ class Solver(object):
 
     def Xgboost_regressor(self):
         import xgboost as xgb
-        xgb_model = xgb.XGBRegressor()
+        xgb_model = xgb.XGBRegressor(objective='reg:squarederror')
         param_grid = {'max_depth': [1, 2, 3, 4], 'learning_rate': [0.1, 0.001, 0.005, 0.01], 'n_estimators': [100, 200, 300]}
         xgb_grid = GridSearchCV(estimator=xgb_model, param_grid=param_grid, scoring='neg_mean_absolute_error', cv=10, n_jobs=5)
         xgb_grid.fit(self.X_train, self.y_train)
@@ -468,14 +468,14 @@ def cluster_center(x):
 if __name__ == '__main__':
     from sklearn import datasets
     iris = datasets.load_iris()
-    x = iris.data
-    y = iris.target
-    y = np.array([i if i != 2 else 1 for i in y])
-    # boston = datasets.load_boston()
-    # x = boston.data
-    # y = boston.target
-    # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
-    # solver = Solver(x_train, x_test, y_train, y_test, './model/test.mod', train='xgboost')
-    # print(solver.predict())
-    print(cluster_k(x))
+    # x = iris.data
+    # y = iris.target
+    # y = np.array([i if i != 2 else 1 for i in y])
+    boston = datasets.load_boston()
+    x = boston.data
+    y = boston.target
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+    solver = Solver(x_train, x_test, y_train, y_test, './model/test.mod', train='xgboost_reg')
+    print(solver.predict())
+    # print(cluster_k(x))
 

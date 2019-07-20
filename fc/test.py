@@ -9,8 +9,10 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error
 import numpy as np
 import fc_net
+import os
 
 def load_data(path):
     columns = ['男', '女', '年龄', '*天门冬氨酸氨基转换酶', '*丙氨酸氨基转换酶',
@@ -63,20 +65,28 @@ class Dataset(object):
 if __name__ == '__main__':
     train_model = True
     train_path = '/home/peihongyue/project/python/dl/data/hpd/train_data.csv'
+    if not os.path.exists(train_path):
+        train_path = '/Users/peihongyue/phy/project/ai/dl/data/train_data.csv'
     test_path = '/home/peihongyue/project/python/dl/data/hpd/test_data.csv'
+    if not os.path.exists(test_path):
+        test_path = '/Users/peihongyue/phy/project/ai/dl/data/test_data.csv'
     train_x, train_y = load_data(train_path)
     train_x = StandardScaler().fit_transform(train_x)
     train_x, test_x, train_y, test_y = train_test_split(train_x, train_y, test_size=0.3)
     data = Dataset(train_x, train_y)
     test_data = Dataset(test_x, test_y)
     test_x, test_y = test_data.next_batch(len(test_x))
-    model = fc_net.Model(40, 0.00001)
+    model = fc_net.Model(40, 0.0001)
+    best_loss = 999999.0
     if train_model:
         for i in range(1000):
             batch_x, batch_y = data.next_batch(1000)
             model.sess.run(model.step, feed_dict={model.inputs: batch_x, model.y: batch_y})
             loss = model.sess.run(model.loss, feed_dict={model.inputs: test_x, model.y: test_y})
             if i % 100 == 0:
-                print('loss' + str(i) + ': ', loss)
+                print('loss_dnn ' + str(i) + ': ', loss)
+            if best_loss > loss:
+                best_loss = loss
+    print(best_loss)
 
 

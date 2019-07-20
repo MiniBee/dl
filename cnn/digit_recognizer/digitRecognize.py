@@ -31,12 +31,15 @@ def get_test(path):
 
 
 class Dataset(object):
-    def __init__(self, x, y):
+    def __init__(self, x, y, test=True):
         self._index_in_epoch = 0
         self._epochs_completed = 0
         self._num_examples = x.shape[0]
         self.x = x
         self.y = y
+
+    def test_data(self):
+        pass
 
     def next_batch(self, batch_size, shuffle=True):
         start = self._index_in_epoch
