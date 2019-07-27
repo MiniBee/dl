@@ -14,3 +14,4 @@ sample/
 *.index
 *.meta
 *.pyc
+*.hdf5

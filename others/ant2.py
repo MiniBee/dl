@@ -130,7 +130,6 @@ class Auto_Grow_Tree(object):
 
     def cluster_center(self):
         x = np.array(list(self.y_train) + list(self.y_valid)).reshape(-1, 1)
-        # x = self.X_train
         from sklearn.cluster import KMeans
         a = {}
         c_center = {}
@@ -209,7 +208,7 @@ class Auto_Grow_Tree(object):
         saveBestModel = kcallbacks.ModelCheckpoint(best_weights_filepath, monitor='val_loss', verbose=1,
                                                    save_best_only=True, mode='auto')
         model.fit(X_train, y_train, batch_size=self.batch_size, epochs=self.epochs, verbose=1,
-                  validation_data=([X_valid, y_valid]), callbacks=[earlyStopping, saveBestModel])
+                  validation_data=(X_valid, y_valid), callbacks=[earlyStopping, saveBestModel])
         model.load_weights(best_weights_filepath)
         return model
 
@@ -264,9 +263,6 @@ class Auto_Grow_Tree(object):
         mix = np.concatenate((X, hidden), 1)
         if self.output_dim == 1:
             out = []
-            print('<----->')
-            print(y_pred.reshape(-1).shape)
-            print(self.k_mean_list.shape)
             tmp = np.array([abs(y_pred.reshape(-1) - z) for z in self.k_mean_list]).argmin(axis=0)
             for i in range(len(self.k_mean_list)):
                 ind = np.where(tmp == i)[0]
