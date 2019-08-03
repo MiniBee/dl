@@ -64,6 +64,7 @@ class Dataset(object):
             end = self._index_in_epoch
             return self.x[start:end], self.y[start:end]
 
+
 if __name__ == '__main__':
     train_model = True
     train_path = '/home/peihongyue/project/python/dl/data/hpd/train_data.csv'
