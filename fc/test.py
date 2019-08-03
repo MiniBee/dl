@@ -24,12 +24,14 @@ def load_data(path):
     label_columns = ['血糖']
     data = pd.read_csv(path)
     # data = data.fillna(0)
+    a = pd.get_dummies(data['性别'])
+    data = pd.concat([data, a], axis=1)
+    data.drop(['性别'], axis=1, inplace=True)
     for col in columns:
         if data[col].isnull().any():
-            data[col].fillna(data[col].median())
-    a = pd.get_dummies(data['性别'])
-    data.drop(['性别'], axis=1, inplace=True)
-    data = pd.concat([data, a], axis=1)
+            data[col].fillna(data[col].median(), inplace=True)
+
+    print(data.count())
     return data[columns].values, data[label_columns].values
 
 class Dataset(object):
@@ -75,15 +77,17 @@ if __name__ == '__main__':
         test_path = '/Users/peihongyue/phy/project/ai/dl/data/test_data.csv'
     train_x, train_y = load_data(train_path)
     train_x = StandardScaler().fit_transform(train_x)
-    train_x, test_x, train_y, test_y = train_test_split(train_x, train_y, test_size=0.3)
+
+
+    # train_x, test_x, train_y, test_y = train_test_split(train_x, train_y, test_size=0.3)
     data = Dataset(train_x, train_y)
     test_data = Dataset(test_x, test_y)
     test_x, test_y = test_data.next_batch(len(test_x))
-    model = fc_net.Model(40, 0.0001)
+    model = fc_net.Model(35, 0.0001)
     best_loss = 999999.0
     if train_model:
-        for i in range(1000):
-            batch_x, batch_y = data.next_batch(1000)
+        for i in range(10000):
+            batch_x, batch_y = data.next_batch(2000)
             model.sess.run(model.step, feed_dict={model.inputs: batch_x, model.y: batch_y})
             loss = model.sess.run(model.loss, feed_dict={model.inputs: test_x, model.y: test_y})
             if i % 100 == 0:
