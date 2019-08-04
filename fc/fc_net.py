@@ -18,12 +18,16 @@ class Model():
 
     def build_model(self):
         self.graph = tf.Graph()
-        self.inputs = tf.placeholder(dtype=tf.float32, shape=[None, self.x_dim], name="inputs")
+        # self.inputs = tf.placeholder(dtype=tf.float32, shape=[None, self.x_dim], name="inputs")
+        self.inputs = tf.placeholder(dtype=tf.float32, shape=[None, self.x_dim, 1], name="inputs")
         self.y = tf.placeholder(dtype=tf.float32, shape=[None, 1], name="y")
-        net = self.block(self.inputs, 1, 50, 1)
-        net = self.block(net, 1, 75, 2)
-        net = self.block(net, 1, 100, 3)
-        net = self.block(net, 1, 50, 4)
+        # net = self.block(self.inputs, 1, 100, 1)
+        # net = self.block(net, 1, 200, 2)
+        # net = self.block(net, 2, 200, 3)
+        net = self.conv_bloc(self.inputs, 1, 4, 3, 1)
+        net = self.conv_bloc(self.inputs, 1, 2, 3, 2)
+        net = self.block(net, 1, 2048, 2)
+        net = tf.layers.flatten(net)
         self.y_pred = self.block(net, 1, 1, 5)
         self.loss = tf.losses.mean_squared_error(self.y, self.y_pred)
         self.step = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -43,6 +47,21 @@ class Model():
             for itr in range(n_fc):
                 net = tf.layers.dense(net, n_chl, activation=tf.nn.relu6)
             net = tf.layers.batch_normalization(net)
+        return net
+
+    def conv_bloc(self, net, n_cn, n_chl, kernel_size, blockID):
+        '''
+        :param net:
+        :param kernel_size:
+        :param n_chl:
+        :param blockID:
+        :return:
+        '''
+        with tf.variable_scope('block%d' % blockID):
+            for itr in range(n_cn):
+                # net = tf.layers.Conv1D(net, n_chl, kernel_size, activation=tf.nn.relu6, padding='same')
+                net = tf.layers.conv1d(net, n_chl, kernel_size, activation=tf.nn.relu, padding="same")
+            # net = tf.layers.batch_normalization(net)
         return net
 
     def init_sess(self, restore=None):

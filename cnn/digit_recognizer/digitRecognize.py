@@ -67,7 +67,7 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
-    train_model = True
+    train_model = False
     # train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train_test.csv'
     train_path = '/home/peihongyue/project/python/dl/data/digit_recognizer/train.csv'
     train_x, train_y = get_train(train_path)

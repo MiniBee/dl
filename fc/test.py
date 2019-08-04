@@ -31,8 +31,18 @@ def load_data(path):
         if data[col].isnull().any():
             data[col].fillna(data[col].median(), inplace=True)
 
-    print(data.count())
-    return data[columns].values, data[label_columns].values
+    data_list = list(data[columns].values)
+    ret = []
+    column_len = len(columns)
+    for idx in range(len(data_list)):
+        tem = list(data_list[idx])
+        for i in range(column_len):
+            for j in range(column_len):
+                # print(data_list[idx][i] / data_list[idx][j])
+                tem.append(data_list[idx][i] / data_list[idx][j] if data_list[idx][j] != 0 else 1e-8)
+        ret.append(np.array(tem))
+
+    return np.array(ret), data[label_columns].values
 
 class Dataset(object):
     def __init__(self, x, y):
@@ -76,22 +86,25 @@ if __name__ == '__main__':
     if not os.path.exists(test_path):
         test_path = '/Users/peihongyue/phy/project/ai/dl/data/test_data.csv'
     train_x, train_y = load_data(train_path)
-    train_x = StandardScaler().fit_transform(train_x)
-
-
+    standardScaler = StandardScaler()
+    train_x = standardScaler.fit_transform(train_x)
+    test_x, test_y = load_data(test_path)
+    test_x = standardScaler.transform(test_x)
     # train_x, test_x, train_y, test_y = train_test_split(train_x, train_y, test_size=0.3)
+    train_x = train_x.reshape(len(train_x), len(train_x[0]), 1)
+    test_x = test_x.reshape(len(test_x), len(test_x[0]), 1)
+    print(train_x.shape)
     data = Dataset(train_x, train_y)
     test_data = Dataset(test_x, test_y)
     test_x, test_y = test_data.next_batch(len(test_x))
-    model = fc_net.Model(35, 0.0001)
+    model = fc_net.Model(len(train_x[0]), 0.005)
     best_loss = 999999.0
     if train_model:
         for i in range(10000):
-            batch_x, batch_y = data.next_batch(2000)
+            batch_x, batch_y = data.next_batch(128)
             model.sess.run(model.step, feed_dict={model.inputs: batch_x, model.y: batch_y})
             loss = model.sess.run(model.loss, feed_dict={model.inputs: test_x, model.y: test_y})
-            if i % 100 == 0:
-                print('loss_dnn ' + str(i) + ': ', loss)
+            print('loss_dnn ' + str(i) + ': ', loss)
             if best_loss > loss:
                 best_loss = loss
     print(best_loss)
