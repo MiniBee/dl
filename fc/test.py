@@ -31,18 +31,7 @@ def load_data(path):
         if data[col].isnull().any():
             data[col].fillna(data[col].median(), inplace=True)
 
-    data_list = list(data[columns].values)
-    ret = []
-    column_len = len(columns)
-    for idx in range(len(data_list)):
-        tem = list(data_list[idx])
-        for i in range(column_len):
-            for j in range(column_len):
-                # print(data_list[idx][i] / data_list[idx][j])
-                tem.append(data_list[idx][i] / data_list[idx][j] if data_list[idx][j] != 0 else 1e-8)
-        ret.append(np.array(tem))
-
-    return np.array(ret), data[label_columns].values
+    return data[columns], data[label_columns].values
 
 class Dataset(object):
     def __init__(self, x, y):
