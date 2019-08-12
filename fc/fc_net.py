@@ -24,10 +24,11 @@ class Model():
         # net = self.block(self.inputs, 1, 100, 1)
         # net = self.block(net, 1, 200, 2)
         # net = self.block(net, 2, 200, 3)
-        net = self.conv_bloc(self.inputs, 1, 4, 3, 1)
-        net = self.conv_bloc(self.inputs, 1, 2, 3, 2)
-        net = self.block(net, 1, 2048, 2)
+        net = self.conv_bloc(self.inputs, 1, 1, 32, 1)
+        net = self.conv_bloc(self.inputs, 1, 2, 64, 2)
+        net = self.conv_bloc(self.inputs, 1, 2, 2, 3)
         net = tf.layers.flatten(net)
+        net = self.block(net, 1, 512, 4)
         self.y_pred = self.block(net, 1, 1, 5)
         self.loss = tf.losses.mean_squared_error(self.y, self.y_pred)
         self.step = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -60,8 +61,8 @@ class Model():
         with tf.variable_scope('block%d' % blockID):
             for itr in range(n_cn):
                 # net = tf.layers.Conv1D(net, n_chl, kernel_size, activation=tf.nn.relu6, padding='same')
-                net = tf.layers.conv1d(net, n_chl, kernel_size, activation=tf.nn.relu, padding="same")
-            # net = tf.layers.batch_normalization(net)
+                net = tf.layers.conv1d(net, n_chl, kernel_size, activation=tf.nn.tanh, padding="same")
+            # net = tf.layers.max_pooling1d(net, pool_size=2, strides=2)
         return net
 
     def init_sess(self, restore=None):

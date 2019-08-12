@@ -13,6 +13,7 @@ from sklearn.metrics import mean_squared_error
 import numpy as np
 import fc_net
 import os
+import re
 
 def load_data(path):
     columns = ['男', '女', '年龄', '*天门冬氨酸氨基转换酶', '*丙氨酸氨基转换酶',
@@ -21,15 +22,25 @@ def load_data(path):
        '红细胞平均血红蛋白量', '红细胞平均血红蛋白浓度', '红细胞体积分布宽度', '血小板计数', '血小板平均体积',
        '血小板体积分布宽度', '血小板比积', '中性粒细胞%', '淋巴细胞%', '单核细胞%', '嗜酸细胞%', '嗜碱细胞%',
        ]
+    columns = ['男', '女', '年龄', '*天门冬氨酸氨基转换酶', '*丙氨酸氨基转换酶',
+       '*碱性磷酸酶', '*r-谷氨酰基转换酶', '*总蛋白', '白蛋白', '*球蛋白', '白球比例', '甘油三酯', '总胆固醇',
+       '高密度脂蛋白胆固醇', '低密度脂蛋白胆固醇', '尿素', '肌酐', '尿酸', '乙肝表面抗原', '乙肝表面抗体', '乙肝e抗原',
+       '乙肝e抗体', '乙肝核心抗体', '白细胞计数', '红细胞计数', '血红蛋白', '红细胞压积', '红细胞平均体积',
+       '红细胞平均血红蛋白量', '红细胞平均血红蛋白浓度', '红细胞体积分布宽度', '血小板计数', '血小板平均体积',
+       '血小板体积分布宽度', '血小板比积', '中性粒细胞%', '淋巴细胞%', '单核细胞%', '嗜酸细胞%', '嗜碱细胞%']
     label_columns = ['血糖']
     data = pd.read_csv(path)
+    print(data.columns)
     # data = data.fillna(0)
     a = pd.get_dummies(data['性别'])
     data = pd.concat([data, a], axis=1)
     data.drop(['性别'], axis=1, inplace=True)
     for col in columns:
         if data[col].isnull().any():
-            data[col].fillna(data[col].median(), inplace=True)
+            if re.search('乙肝', col, re.IGNORECASE):
+                data[col].fillna(999, inplace=True)
+            else:
+                data[col].fillna(data[col].median(), inplace=True)
 
     return data[columns], data[label_columns].values
 
@@ -86,16 +97,19 @@ if __name__ == '__main__':
     data = Dataset(train_x, train_y)
     test_data = Dataset(test_x, test_y)
     test_x, test_y = test_data.next_batch(len(test_x))
-    model = fc_net.Model(len(train_x[0]), 0.005)
+    model = fc_net.Model(len(train_x[0]), 0.00001)
     best_loss = 999999.0
     if train_model:
-        for i in range(10000):
-            batch_x, batch_y = data.next_batch(128)
+        for i in range(40000):
+            batch_x, batch_y = data.next_batch(512)
             model.sess.run(model.step, feed_dict={model.inputs: batch_x, model.y: batch_y})
-            loss = model.sess.run(model.loss, feed_dict={model.inputs: test_x, model.y: test_y})
-            print('loss_dnn ' + str(i) + ': ', loss)
-            if best_loss > loss:
-                best_loss = loss
+            loss_train = model.sess.run(model.loss, feed_dict={model.inputs: batch_x, model.y: batch_y})
+            loss_test = model.sess.run(model.loss, feed_dict={model.inputs: test_x, model.y: test_y})
+            if i % 100 == 0:
+                print('loss_test ' + str(i) + ': ', loss_test)
+                print('loss_train ---------> ' + str(i) + ': ', loss_train)
+            if best_loss > loss_test:
+                best_loss = loss_test
     print(best_loss)
 
 
