@@ -42,6 +42,69 @@ def load_data(path):
             else:
                 data[col].fillna(data[col].median(), inplace=True)
 
+    data['总酶'] = data['*天门冬氨酸氨基转换酶'] + data['*丙氨酸氨基转换酶'] + data['*碱性磷酸酶'] + data['*r-谷氨酰基转换酶']
+
+    data['*天门冬氨酸氨基转换酶ratio'] = data['*天门冬氨酸氨基转换酶'] / np.maximum(data["总酶"].astype("float"), 1)
+    data['*天门冬氨酸氨基转换酶ratio'].loc[data['*天门冬氨酸氨基转换酶ratio'] < 0] = 0
+    data['*天门冬氨酸氨基转换酶ratio'].loc[data['*天门冬氨酸氨基转换酶ratio'] > 1] = 1
+
+    data['*丙氨酸氨基转换酶ratio'] = data['*丙氨酸氨基转换酶'] / np.maximum(data["总酶"].astype("float"), 1)
+    data['*丙氨酸氨基转换酶ratio'].loc[data['*丙氨酸氨基转换酶ratio'] < 0] = 0
+    data['*丙氨酸氨基转换酶ratio'].loc[data['*丙氨酸氨基转换酶ratio'] > 1] = 1
+
+    data['*碱性磷酸酶ratio'] = data['*碱性磷酸酶'] / np.maximum(data["总酶"].astype("float"), 1)
+    data['*碱性磷酸酶ratio'].loc[data['*碱性磷酸酶ratio'] < 0] = 0
+    data['*碱性磷酸酶ratio'].loc[data['*碱性磷酸酶ratio'] > 1] = 1
+
+    data['*r-谷氨酰基转换酶ratio'] = data['*r-谷氨酰基转换酶'] / np.maximum(data["总酶"].astype("float"), 1)
+    data['*r-谷氨酰基转换酶ratio'].loc[data['*r-谷氨酰基转换酶ratio'] < 0] = 0
+    data['*r-谷氨酰基转换酶ratio'].loc[data['*r-谷氨酰基转换酶ratio'] > 1] = 1
+
+    data['白蛋白ratio'] = data['白蛋白'] / np.maximum(data["*总蛋白"].astype("float"), 1)
+    data['白蛋白ratio'].loc[data['白蛋白ratio'] < 0] = 0
+    data['白蛋白ratio'].loc[data['白蛋白ratio'] > 1] = 1
+
+    data['*球蛋白ratio'] = data['*球蛋白'] / np.maximum(data["*总蛋白"].astype("float"), 1)
+    data['*球蛋白ratio'].loc[data['*球蛋白ratio'] < 0] = 0
+    data['*球蛋白ratio'].loc[data['*球蛋白ratio'] > 1] = 1
+
+    data['高密度脂蛋白胆固醇ratio'] = data['高密度脂蛋白胆固醇'] / np.maximum(data["总胆固醇"].astype("float"), 1)
+    data['高密度脂蛋白胆固醇ratio'].loc[data['高密度脂蛋白胆固醇ratio'] < 0] = 0
+    data['高密度脂蛋白胆固醇ratio'].loc[data['高密度脂蛋白胆固醇ratio'] > 1] = 1
+
+    data['低密度脂蛋白胆固醇ratio'] = data['低密度脂蛋白胆固醇'] / np.maximum(data["总胆固醇"].astype("float"), 1)
+    data['低密度脂蛋白胆固醇ratio'].loc[data['低密度脂蛋白胆固醇ratio'] < 0] = 0
+    data['低密度脂蛋白胆固醇ratio'].loc[data['低密度脂蛋白胆固醇ratio'] > 1] = 1
+
+    data['null_count'] = data.isnull().sum(axis=1)
+
+    data['*r-谷氨酰基转换酶-尿酸'] = data['*r-谷氨酰基转换酶'] - data['尿酸']
+    data['*r-谷氨酰基转换酶*年龄'] = data['*r-谷氨酰基转换酶'] * data['年龄']
+    data['*r-谷氨酰基转换酶*总胆固醇'] = data['*r-谷氨酰基转换酶'] * data['总胆固醇']
+
+    data['*丙氨酸氨基转换酶**天门冬氨酸氨基转换酶'] = data['*丙氨酸氨基转换酶'] * data['*天门冬氨酸氨基转换酶']
+    data['*丙氨酸氨基转换酶+*天门冬氨酸氨基转换酶'] = data['*丙氨酸氨基转换酶'] + data['*天门冬氨酸氨基转换酶']
+    data['*丙氨酸氨基转换酶/*天门冬氨酸氨基转换酶'] = data['*丙氨酸氨基转换酶'] / data['*天门冬氨酸氨基转换酶']
+
+    data['*天门冬氨酸氨基转换酶/*总蛋白'] = data['*天门冬氨酸氨基转换酶'] / data['*总蛋白']
+    data['*天门冬氨酸氨基转换酶-*球蛋白'] = data['*天门冬氨酸氨基转换酶'] - data['*球蛋白']
+
+    data['*球蛋白/甘油三酯'] = data['*球蛋白'] / data['甘油三酯']
+
+    data['年龄*红细胞计数/红细胞体积分布宽度-红细胞计数'] = data['年龄'] * data['红细胞计数'] / (data['红细胞体积分布宽度'] - data['红细胞计数'])
+
+    data['尿酸/肌酐'] = data['尿酸'] / data['肌酐']
+
+    data['肾'] = data['尿素'] + data['肌酐'] + data['尿酸']
+
+    data['红细胞计数*红细胞平均血红蛋白量'] = data['红细胞计数'] * data['红细胞平均血红蛋白量']
+    data['红细胞计数*红细胞平均血红蛋白浓度'] = data['红细胞计数'] * data['红细胞平均血红蛋白浓度']
+    data['红细胞计数*红细胞平均体积'] = data['红细胞计数'] * data['红细胞平均体积']
+
+    data['嗜酸细胞'] = data['嗜酸细胞%'] * 100
+
+    data['年龄*中性粒细胞%/尿酸*血小板比积'] = data['年龄'] * data['中性粒细胞%'] / (data['尿酸'] * data['血小板比积'])
+
     return data[columns], data[label_columns].values
 
 class Dataset(object):
