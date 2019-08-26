@@ -19,16 +19,12 @@ class Model():
     def build_model(self):
         self.graph = tf.Graph()
         # self.inputs = tf.placeholder(dtype=tf.float32, shape=[None, self.x_dim], name="inputs")
-        self.inputs = tf.placeholder(dtype=tf.float32, shape=[None, self.x_dim, 1], name="inputs")
+        self.inputs = tf.placeholder(dtype=tf.float32, shape=[None, self.x_dim], name="inputs")
         self.y = tf.placeholder(dtype=tf.float32, shape=[None, 1], name="y")
-        # net = self.block(self.inputs, 1, 100, 1)
-        # net = self.block(net, 1, 200, 2)
-        # net = self.block(net, 2, 200, 3)
-        net = self.conv_bloc(self.inputs, 1, 1, 32, 1)
-        net = self.conv_bloc(self.inputs, 1, 2, 64, 2)
-        net = self.conv_bloc(self.inputs, 1, 2, 2, 3)
-        net = tf.layers.flatten(net)
-        net = self.block(net, 1, 512, 4)
+        net = self.block(self.inputs, 1, 512, 1)
+        # net = self.block(net, 1, 32, 2)
+        # net = self.block(net, 1, 16, 3)
+        net = self.block(net, 1, 32, 4)
         self.y_pred = self.block(net, 1, 1, 5)
         self.loss = tf.losses.mean_squared_error(self.y, self.y_pred)
         self.step = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -46,7 +42,7 @@ class Model():
         '''
         with tf.variable_scope("block%d" % blockID):
             for itr in range(n_fc):
-                net = tf.layers.dense(net, n_chl, activation=tf.nn.relu6)
+                net = tf.layers.dense(net, n_chl, activation=tf.nn.relu)
             net = tf.layers.batch_normalization(net)
         return net
 

@@ -11,8 +11,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 import numpy as np
-import fc_net
+import fc_net1
 import os
+import sys
 import re
 
 def load_data(path):
@@ -162,25 +163,27 @@ if __name__ == '__main__':
     test_x, test_y = load_data(test_path)
     test_x = standardScaler.transform(test_x)
     # train_x, test_x, train_y, test_y = train_test_split(train_x, train_y, test_size=0.3)
-    train_x = train_x.reshape(len(train_x), len(train_x[0]), 1)
-    test_x = test_x.reshape(len(test_x), len(test_x[0]), 1)
     print(train_x.shape)
     data = Dataset(train_x, train_y)
     test_data = Dataset(test_x, test_y)
     test_x, test_y = test_data.next_batch(len(test_x))
-    model = fc_net.Model(len(train_x[0]), 0.00005)
+    model = fc_net1.Model(len(train_x[0]), 0.000005)
     best_loss = 999999.0
     if train_model:
-        for i in range(40000):
+        for i in range(80000):
             batch_x, batch_y = data.next_batch(512)
             model.sess.run(model.step, feed_dict={model.inputs: batch_x, model.y: batch_y})
             loss_train = model.sess.run(model.loss, feed_dict={model.inputs: batch_x, model.y: batch_y})
             loss_test = model.sess.run(model.loss, feed_dict={model.inputs: test_x, model.y: test_y})
             if i % 100 == 0:
                 print('loss_test ' + str(i) + ': ', loss_test)
-                print('loss_train ---------> ' + str(i) + ': ', loss_train)
+                print('loss_train ' + str(i) + ': ', loss_train)
+                print('best_loss ', best_loss)
             if best_loss > loss_test:
                 best_loss = loss_test
+            if loss_test - best_loss > 0.3:
+                print('stop ... ')
+                sys.exit(0)
     print(best_loss)
 
 

@@ -179,6 +179,7 @@ if __name__ == '__main__':
             if i % 100 == 0:
                 print('loss_test ' + str(i) + ': ', loss_test)
                 print('loss_train ---------> ' + str(i) + ': ', loss_train)
+                print('best_loss', best_loss)
             if best_loss > loss_test:
                 best_loss = loss_test
     print(best_loss)
