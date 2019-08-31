@@ -13,7 +13,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_squared_error
 from sklearn.svm import SVR
 import xgboost as xgb
-import lightgbm as lgb
+# import lightgbm as lgb
 import catboost as cb
 import re
 import os
@@ -113,7 +113,6 @@ def load_data(path):
        '年龄*中性粒细胞%/尿酸*血小板比积'])
     columns_index = [54, 11, 15, 61, 18, 22, 45, 24, 46, 50, 43, 27, 52, 13, 35, 42, 5, 55, 2, 51, 53, 32, 16, 3, 56, 12, 28, 38, 31, 8, 33, 23, 30, 36, 14, 25, 58, 7, 17, 57, 21, 26, 39, 9, 37, 4, 19, 49, 47, 6, 29, 34, 48, 59, 44, 10, 0, 40, 20, 41, 1, 60]
     columns1 = [columns[i] for i in columns_index]
-    print(columns1)
     return data[columns1], data[label_columns].values
 
 
@@ -180,20 +179,18 @@ if __name__ == '__main__':
     cbst = cb.CatBoostRegressor(iterations=2, depth=2, learning_rate=1, loss_function='RMSE')
     # cbst_param = {'learning_rate': [0.1, 0.05, 0.15], 'depth': [1,2,3], 'iterations': [20, 50, 100]}
     # cb_grid = GridSearchCV(estimator=cbst, param_grid=cbst_param, cv=10)
-    train_pool = cb.Pool(train_x,
-                      train_y,
-                      cat_features=[1])
-    test_pool = cb.Pool(test_x,
-                     cat_features=[1])
-    cbst.fit(train_pool)
+    # train_pool = cb.Pool(train_x,
+    #                   train_y)
+    # test_pool = cb.Pool(test_x)
+    cbst.fit(train_x, train_y)
     # cbst = cb_grid.best_estimator_
-    pred_y6 = cbst.predict(test_pool)
+    pred_y6 = cbst.predict(test_x)
 
     # print(rf_grid.best_params_)
     # print(gbd_grid.best_params_)
     # print(xgb_grid.best_params_)
     # print(gbm_grid.best_params_)
-    print(cbst_grid.best_params_)
+    # print(cbst_grid.best_params_)
 
     # print(mean_squared_error(test_y, pred_y1))
     # print(mean_squared_error(test_y, pred_y2))
