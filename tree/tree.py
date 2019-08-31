@@ -36,7 +36,7 @@ def load_data(path):
     for col in columns:
         if data[col].isnull().any():
             if re.search('乙肝', col, re.IGNORECASE):
-                data[col].fillna(999, inplace=True)
+                data[col].fillna(-999, inplace=True)
             else:
                 data[col].fillna(data[col].median(), inplace=True)
 
@@ -130,73 +130,73 @@ if __name__ == '__main__':
     test_x, test_y = load_data(test_path)
     test_x = standardScaler.transform(test_x)
 
-    # rf = RandomForestRegressor(n_jobs=10)
-    # rf_param = {'n_estimators': [140, 120, 130], "max_features": ["log2", "sqrt"]}
-    # rf_grid = GridSearchCV(estimator=rf, param_grid=rf_param, cv=10)
-    # rf_grid.fit(train_x, train_y)
-    # rf = rf_grid.best_estimator_
-    # pred_y1 = rf.predict(test_x)
-    #
-    # gbd = GradientBoostingRegressor()
-    # gbd_param = {'n_estimators': [330, 340, 320], 'learning_rate': [0.11, 0.12, 0.07], 'max_depth': [1 ,2, 3]}
-    # gbd_grid = GridSearchCV(estimator=gbd, param_grid=gbd_param, cv=10)
-    # gbd_grid.fit(train_x, train_y)
-    # gbd = gbd_grid.best_estimator_
-    # pred_y2 = gbd.predict(test_x)
-    #
-    # xgb_param = {'max_depth': [2,1,3], 'learning_rate': [0.12, 0.14, 0.11], 'n_estimators': [100, 40, 50]}
-    # xgb_grid = GridSearchCV(estimator=xgb.XGBRegressor(objective='reg:squarederror'), param_grid=xgb_param, cv=10)
-    # xgb_grid.fit(train_x, train_y)
-    # xgb = xgb_grid.best_estimator_
-    # pred_y3 = xgb.predict(test_x)
-    #
-    # svc = SVR()
-    # svc.fit(train_x, train_y)
-    # pred_y4 = svc.predict(test_x)
-    #
-    # gbm = lgb.LGBMRegressor(objective='regression')
-    # gbm_param = {'n_estimators': [145, 140], 'learning_rate': [0.02, 0.03]}
-    # gbm_grid = GridSearchCV(estimator=gbm, param_grid=gbm_param, cv=10)
-    # gbm_grid.fit(train_x, train_y)
-    # gbm = gbm_grid.best_estimator_
-    # '''
-    # # booster = gbm.booster_
-    # # importance = booster.feature_importance(importance_type='split')
-    # # feature_name = booster.feature_name()
-    # # ret = []
-    # # for (feature_name, importance) in zip(feature_name, importance):
-    # #     print (feature_name, importance)
-    # #     ret.append([feature_name, importance])
-    # # ret.sort(key=lambda x: x[1], reverse=True)
-    # # columns_index = [int(i[0].split('_')[1]) for i in ret]
-    # # print(columns_index)
-    # # lgb.plot_importance(gbm, max_num_features=30)
-    # # plt.title("Featurertances")
-    # # plt.show()
-    # '''
-    # pred_y5 = gbm.predict(test_x)
+    rf = RandomForestRegressor(n_jobs=10)
+    rf_param = {'n_estimators': [140, 120, 130], "max_features": ["log2", "sqrt"]}
+    rf_grid = GridSearchCV(estimator=rf, param_grid=rf_param, cv=10)
+    rf_grid.fit(train_x, train_y)
+    rf = rf_grid.best_estimator_
+    pred_y1 = rf.predict(test_x)
 
-    cbst = cb.CatBoostRegressor(iterations=2, depth=2, learning_rate=1, loss_function='RMSE')
-    # cbst_param = {'learning_rate': [0.1, 0.05, 0.15], 'depth': [1,2,3], 'iterations': [20, 50, 100]}
-    # cb_grid = GridSearchCV(estimator=cbst, param_grid=cbst_param, cv=10)
-    # train_pool = cb.Pool(train_x,
-    #                   train_y)
-    # test_pool = cb.Pool(test_x)
-    cbst.fit(train_x, train_y)
-    # cbst = cb_grid.best_estimator_
-    pred_y6 = cbst.predict(test_x)
+    gbd = GradientBoostingRegressor()
+    gbd_param = {'n_estimators': [330, 340, 320], 'learning_rate': [0.11, 0.12, 0.07], 'max_depth': [1 ,2, 3]}
+    gbd_grid = GridSearchCV(estimator=gbd, param_grid=gbd_param, cv=10)
+    gbd_grid.fit(train_x, train_y)
+    gbd = gbd_grid.best_estimator_
+    pred_y2 = gbd.predict(test_x)
 
-    # print(rf_grid.best_params_)
-    # print(gbd_grid.best_params_)
-    # print(xgb_grid.best_params_)
-    # print(gbm_grid.best_params_)
+    xgb_param = {'max_depth': [2,1,3], 'learning_rate': [0.12, 0.14, 0.11], 'n_estimators': [100, 40, 50]}
+    xgb_grid = GridSearchCV(estimator=xgb.XGBRegressor(objective='reg:squarederror'), param_grid=xgb_param, cv=10)
+    xgb_grid.fit(train_x, train_y)
+    xgb = xgb_grid.best_estimator_
+    pred_y3 = xgb.predict(test_x)
+
+    svc = SVR()
+    svc.fit(train_x, train_y)
+    pred_y4 = svc.predict(test_x)
+
+    gbm = lgb.LGBMRegressor(objective='regression')
+    gbm_param = {'n_estimators': [145, 140], 'learning_rate': [0.02, 0.03]}
+    gbm_grid = GridSearchCV(estimator=gbm, param_grid=gbm_param, cv=10)
+    gbm_grid.fit(train_x, train_y)
+    gbm = gbm_grid.best_estimator_
+    '''
+    # booster = gbm.booster_
+    # importance = booster.feature_importance(importance_type='split')
+    # feature_name = booster.feature_name()
+    # ret = []
+    # for (feature_name, importance) in zip(feature_name, importance):
+    #     print (feature_name, importance)
+    #     ret.append([feature_name, importance])
+    # ret.sort(key=lambda x: x[1], reverse=True)
+    # columns_index = [int(i[0].split('_')[1]) for i in ret]
+    # print(columns_index)
+    # lgb.plot_importance(gbm, max_num_features=30)
+    # plt.title("Featurertances")
+    # plt.show()
+    '''
+    pred_y5 = gbm.predict(test_x)
+
+    # cbst = cb.CatBoostRegressor(iterations=2, depth=2, learning_rate=1, loss_function='RMSE')
+    # # cbst_param = {'learning_rate': [0.1, 0.05, 0.15], 'depth': [1,2,3], 'iterations': [20, 50, 100]}
+    # # cb_grid = GridSearchCV(estimator=cbst, param_grid=cbst_param, cv=10)
+    # # train_pool = cb.Pool(train_x,
+    # #                   train_y)
+    # # test_pool = cb.Pool(test_x)
+    # cbst.fit(train_x, train_y)
+    # # cbst = cb_grid.best_estimator_
+    # pred_y6 = cbst.predict(test_x)
+
+    print(rf_grid.best_params_)
+    print(gbd_grid.best_params_)
+    print(xgb_grid.best_params_)
+    print(gbm_grid.best_params_)
     # print(cbst_grid.best_params_)
 
-    # print(mean_squared_error(test_y, pred_y1))
-    # print(mean_squared_error(test_y, pred_y2))
-    # print(mean_squared_error(test_y, pred_y3))
-    # print(mean_squared_error(test_y, pred_y4))
-    # print(mean_squared_error(test_y, pred_y5))
-    print(mean_squared_error(test_y, pred_y6))
+    print(mean_squared_error(test_y, pred_y1))
+    print(mean_squared_error(test_y, pred_y2))
+    print(mean_squared_error(test_y, pred_y3))
+    print(mean_squared_error(test_y, pred_y4))
+    print(mean_squared_error(test_y, pred_y5))
+    # print(mean_squared_error(test_y, pred_y6))
     #
     print(mean_squared_error(test_y, (0.1*pred_y2 + 0*pred_y3 + 1*pred_y1 + 0.8*pred_y5)))
