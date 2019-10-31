@@ -167,7 +167,7 @@ if __name__ == '__main__':
     data = Dataset(train_x, train_y)
     test_data = Dataset(test_x, test_y)
     test_x, test_y = test_data.next_batch(len(test_x))
-    model = fc_net1.Model(len(train_x[0]), 0.00005)
+    model = fc_net1.Model(len(train_x[0]), 0.000001)
     best_loss = 999999.0
     count = 0
     if train_model:
@@ -185,7 +185,7 @@ if __name__ == '__main__':
                 best_loss = loss_test
             else:
                 count += 1
-            if loss_test - best_loss > 0.2 or count == 1000:
+            if loss_test - best_loss > 0.2 or count == 10000:
                 print('stop ... ')
                 sys.exit(0)
     print(best_loss)
