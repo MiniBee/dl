@@ -23,11 +23,11 @@ class Image_Data(object):
         pass
 
 if __name__ == '__main__':
-    image_data = Image_Data('/home/peihongyue/project/python/dl/data/dogs-vs-cats-redux-kernels-edition/dogs-vs-cats-redux-kernels-edition', 32)
+    image_data = Image_Data('/home/peihongyue/project/python/dl/data/dog_cat/dog_cat', 32)
     train_list = os.listdir(image_data.train_path)
     print(train_list)
     for image in train_list[:10]:
-        i = cv.imread(os.path.join(im     age_data.train_path, image))
+        i = cv.imread(os.path.join(image_data.train_path, image))
         print(i)
 
 
