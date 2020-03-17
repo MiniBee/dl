@@ -80,6 +80,8 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         return self.linear(out)
 
     def split_head(self, tensor, batch_size):
+        print('-' * 50, tensor)
+        print(tf.reshape(tensor, (batch_size, -1, 2, 512)))
         return tf.transpose(tf.reshape(tensor, (batch_size, -1, self.multi_head_count, self.d_h)), [0, 2, 1, 3])
 
     def concat_head(self, tensor, batch_size):
@@ -93,9 +95,9 @@ class PositionWiseFeedForward(tf.keras.layers.Layer):
         self.linear2 = tf.keras.layers.Dense(d_model)
 
     def call(self, input):
-        out = self.linear1.Dense(input)
+        out = self.linear1(input)
         out = tf.keras.layers.ReLU(out)
-        out = self.linear2.Dense(out)
+        out = self.linear2(out)
         return out + input
 
 
@@ -137,16 +139,17 @@ class Transformer(tf.keras.Model):
         self.encoder_embedding_layer = PositionEncoding(input_vocat_size, self.d_model)
         self.encoder_embedding_dropout = tf.keras.layers.Dropout(dropout_prob)
         self.encoder_layers = [Encoder(attention_head_count, d_model, d_point_wise_ff, dropout_prob) for _ in range(encoder_count)]
-        self.linear = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid)
+        self.linear1 = tf.keras.layers.Dense(256, activation='tanh')
+        self.linear2 = tf.keras.layers.Dense(1, activation='sigmoid')
 
     def call(self, input, training=True):
-        print('*'*50, np.array(input).shape)
         encoder_tensor = self.encoder_embedding_layer(input)
-        # encoder_tensor = self.encoder_embedding_dropout(encoder_tensor)
-        #
-        # for i in range(len(self.encoder_layers)):
-        #     encoder_tensor = self.encoder_layers[i](encoder_tensor, training=training)
-        return self.linear(encoder_tensor)
+        encoder_tensor = self.encoder_embedding_dropout(encoder_tensor)
+        for i in range(len(self.encoder_layers)):
+            encoder_tensor = self.encoder_layers[i](encoder_tensor, training=training)
+        print('*' * 50, encoder_tensor.shape)
+        encoder_tensor = self.linear1(encoder_tensor)
+        return self.linear2(encoder_tensor)
 
 
 if __name__ == '__main__':

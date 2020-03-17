@@ -11,14 +11,14 @@ import tensorflow as tf
 import time
 import numpy as np
 
-D_MODEL = 7494
+D_MODEL = 1024
 D_POINT_WISE_FF = 2048
 ENCODER_COUNT = 1
-EPOCHES = 1
+EPOCHES = 40
 ATTENTION_HEAD_COUNT = 1
 DROPOUT_PROB = 0.1
 BATCH_SIZE = 10
-BPE_VOCAB_SIZE = 3200
+BPE_VOCAB_SIZE = 7494
 
 
 def load_data(path):
@@ -28,8 +28,8 @@ def load_data(path):
         for line in f:
             i = line.split(',')
             i = [float(a.strip()) for a in i]
-            if len(i) < BPE_VOCAB_SIZE:
-                i += [0.0] * (BPE_VOCAB_SIZE - len(i) + 1)
+            if len(i) < 5000:
+                i += [0.0] * (5000 - len(i) + 1)
             x_train.append(i[1:])
             y_train.append(i[0])
     return np.array(x_train), np.array(y_train)
@@ -51,9 +51,11 @@ if __name__ == '__main__':
     model = tf.keras.Sequential([
         transformer.Transformer(BPE_VOCAB_SIZE, ENCODER_COUNT, ATTENTION_HEAD_COUNT, D_MODEL, D_POINT_WISE_FF, DROPOUT_PROB)
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(x_train, y_train, epochs=EPOCHES, validation_data=(x_test, y_test))
+
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.fit(x_train, y_train, batch_size=32, epochs=EPOCHES, validation_data=(x_test, y_test))
     model.summary()
+
 
 
 
