@@ -7,21 +7,26 @@
 
 import tensorflow as tf
 import numpy as np
-physical_devices = tf.config.experimental.list_physical_devices('GPU')
-assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+try:
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+except:
+    pass
 
 
 class PositionEncoding(tf.keras.layers.Layer):
-    def __init__(self, max_sequence_len, vocab_size, d_model):
+    def __init__(self, vocab_size, d_model):
         super(PositionEncoding, self).__init__()
-        self.pe = np.zeros(shape=(max_sequence_len, d_model))
-        self.position = np.expand_dims(np.arange(0, max_sequence_len), axis=1)
         self.index = np.expand_dims(np.arange(0, d_model, 2), axis=0)
         self.d_model = d_model
         self.embedding = tf.keras.layers.Embedding(vocab_size, d_model)
 
     def call(self, input):
+        max_sequence_len = input.shape[1]
+        self.pe = np.zeros(shape=(max_sequence_len, self.d_model))
+        self.position = np.expand_dims(np.arange(0, max_sequence_len), axis=1)
         self.pe[:, 0::2] = np.sin(self.pos())
         self.pe[:, 1::2] = np.cos(self.pos())
         return self.pe + self.embedding(input)
@@ -103,13 +108,13 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout1 = tf.keras.layers.Dropout(dropout_prob)
         self.layer_norm1 = tf.keras.layers.LayerNormalization()
 
-        self.position_wise_fead_forward_layer = PositionWiseFeedForward(d_point_wise_ff, d_model, dropout_prob)
+        self.position_wise_fead_forward_layer = PositionWiseFeedForward(d_point_wise_ff, d_model)
 
         self.multi_head_attention = MultiHeadAttention(multi_head_count, d_model, dropout_prob)
         self.dropout2 = tf.keras.layers.Dropout(dropout_prob)
         self.layer_norm2 = tf.keras.layers.LayerNormalization()
 
-    def call(self, x, mask, traning):
+    def call(self, x, mask=None, traning=True):
         out = self.multi_head_attention(x, x, x, mask)
         out = self.dropout1(out, traning=traning)
         out = tf.add(x, out)
@@ -121,10 +126,29 @@ class Encoder(tf.keras.layers.Layer):
 
 
 class Transformer(tf.keras.Model):
-    def __init__(self):
+    def __init__(self, input_vocat_size, encoder_count, attention_head_count, d_model, d_point_wise_ff, dropout_prob):
         super(Transformer, self).__init__()
+        self.encoder_count = encoder_count
+        self.attention_head_count = attention_head_count
+        self.d_model = d_model
+        self.d_point_wise_ff = d_point_wise_ff
+        self.dropout_prob = dropout_prob
+
+        self.encoder_embedding_layer = PositionEncoding(input_vocat_size, self.d_model)
+        self.encoder_embedding_dropout = tf.keras.layers.Dropout(dropout_prob)
+        self.encoder_layers = [Encoder(attention_head_count, d_model, d_point_wise_ff, dropout_prob) for _ in range(encoder_count)]
+        self.linear = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid)
+
+    def call(self, input, training=True):
+        print('*'*50, np.array(input).shape)
+        encoder_tensor = self.encoder_embedding_layer(input)
+        # encoder_tensor = self.encoder_embedding_dropout(encoder_tensor)
+        #
+        # for i in range(len(self.encoder_layers)):
+        #     encoder_tensor = self.encoder_layers[i](encoder_tensor, training=training)
+        return self.linear(encoder_tensor)
 
 
 if __name__ == '__main__':
-    PositionEncoding(10, 500).call()
+    PositionEncoding(10, 500).call(np.array([[23, 13], [1, 3]]))
 

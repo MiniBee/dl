@@ -12,7 +12,7 @@ import jieba
 import re
 import os
 
-jieba.load_userdict('/home/peihongyue/project/python/dl/data/bc/drug')
+# jieba.load_userdict('/home/peihongyue/project/python/dl/data/bc/drug')
 
 
 def text_clean(string):
@@ -72,13 +72,14 @@ def save(path, data_list):
 
 
 if __name__ == '__main__':
-    path = '/home/peihongyue/project/python/dl/data/bc/bc.csv'
-    origin_data = read_file(path)
-    wordIdx = word2idx(origin_data)
-    sentenceIdx = sentence2idx(origin_data, wordIdx)
-    train, test = train_test_split(sentenceIdx, test_size=0.3)
-    save('/home/peihongyue/project/python/dl/data/bc/trainVec', train)
-    save('/home/peihongyue/project/python/dl/data/bc/testVec', test)
+    # path = '/home/peihongyue/project/python/dl/data/bc/bc.csv'
+    # origin_data = read_file(path)
+    # wordIdx = word2idx(origin_data)
+    # sentenceIdx = sentence2idx(origin_data, wordIdx)
+    # train, test = train_test_split(sentenceIdx, test_size=0.3)
+    # save('/home/peihongyue/project/python/dl/data/bc/trainVec', train)
+    # save('/home/peihongyue/project/python/dl/data/bc/testVec', test)
+    # print('hello')
 
 
 
