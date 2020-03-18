@@ -14,11 +14,24 @@ import numpy as np
 D_MODEL = 1024
 D_POINT_WISE_FF = 2048
 ENCODER_COUNT = 1
-EPOCHES = 40
+EPOCHS = 1
 ATTENTION_HEAD_COUNT = 1
 DROPOUT_PROB = 0.1
-BATCH_SIZE = 10
+BATCH_SIZE = 1
 BPE_VOCAB_SIZE = 7494
+
+
+class Mask():
+    def __init__(self):
+        pass
+
+    def create_padding_mask(self, sequences):
+        sequences = tf.cast(tf.math.equal(sequences, 0), dtype=tf.float32)
+        return sequences[:, tf.newaxis, tf.newaxis, :]
+
+    def create_mask(self, inputs):
+        encoder_padding_mask = self.create_padding_mask(inputs)
+        return encoder_padding_mask
 
 
 def load_data(path):
@@ -28,8 +41,9 @@ def load_data(path):
         for line in f:
             i = line.split(',')
             i = [float(a.strip()) for a in i]
-            if len(i) < 5000:
-                i += [0.0] * (5000 - len(i) + 1)
+            i = [len(i)] + i
+            if len(i) < 5001:
+                i += [0.0] * (5000 - len(i))
             x_train.append(i[1:])
             y_train.append(i[0])
     return np.array(x_train), np.array(y_train)
@@ -49,12 +63,15 @@ if __name__ == '__main__':
     # for epoch in range(EPOCHES):
     #     pass
     model = tf.keras.Sequential([
-        transformer.Transformer(BPE_VOCAB_SIZE, ENCODER_COUNT, ATTENTION_HEAD_COUNT, D_MODEL, D_POINT_WISE_FF, DROPOUT_PROB)
+        transformer.Transformer(BPE_VOCAB_SIZE, ENCODER_COUNT, ATTENTION_HEAD_COUNT, D_MODEL, D_POINT_WISE_FF, DROPOUT_PROB, BATCH_SIZE)
     ])
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(x_train, y_train, batch_size=32, epochs=EPOCHES, validation_data=(x_test, y_test))
+    model.fit(x_train[:10], y_train[:10], batch_size=BATCH_SIZE, epochs=EPOCHS, validation_data=(x_test, y_test))
     model.summary()
+
+
+
 
 
 
