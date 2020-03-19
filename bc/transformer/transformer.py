@@ -42,10 +42,12 @@ class ScaledDotProductAction(tf.keras.layers.Layer):
 
     def call(self, query, value, key, mask=None):
         query_matmul_key = tf.matmul(query, key, transpose_b=True)
+        print('scaled dot product attention query shape ... ', query)
+        print('scaled dot product attention query matmul key shape ... ', query_matmul_key)
         scale = tf.sqrt(tf.cast(self.d_h, tf.float32))
         scaled_attention_score = query_matmul_key / scale
         if mask is not None:
-            scaled_attention_score += (mask * -1e9)
+            scaled_attention_score += mask * -1e9
         attention_weight = tf.nn.softmax(scaled_attention_score, axis=-1)
 
         return tf.matmul(attention_weight, value)
@@ -54,13 +56,13 @@ class ScaledDotProductAction(tf.keras.layers.Layer):
 class MultiHeadAttention(tf.keras.layers.Layer):
     def __init__(self, multi_head_count, d_model, dropout_prob):
         super(MultiHeadAttention, self).__init__()
-        self.multi_head_count = int(multi_head_count)
+        self.multi_head_count = multi_head_count
         self.d_model = d_model
 
         if d_model % multi_head_count != 0:
             raise ValueError('d_model({d_model}) % multi_head_count({multi_head_count}) != 0')
 
-        self.d_h = int(d_model / multi_head_count)
+        self.d_h = d_model // multi_head_count
         self.linear_q = tf.keras.layers.Dense(d_model)
         self.linear_k = tf.keras.layers.Dense(d_model)
         self.linear_v = tf.keras.layers.Dense(d_model)
@@ -68,10 +70,15 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self.linear = tf.keras.layers.Dense(d_model)
 
     def call(self, query, key, value, mask=None):
+        print('multi-head attention query shape ... ', query)
         query = self.linear_q(query)
         key = self.linear_k(key)
         value = self.linear_v(value)
         batch_size = np.shape(query)[0]
+
+        print('multi-head attention split query shape ... ', query)
+        print('multi-head attention mask shape ... ', mask)
+
         query = self.split_head(query, batch_size)
         key = self.split_head(key, batch_size)
         value = self.split_head(value, batch_size)
@@ -81,12 +88,23 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         return self.linear(out)
 
     def split_head(self, tensor, batch_size):
-        # print('-' * 50, tensor)
+        print('multi-head attention split head tensor ... ', tensor)
         # print(tf.reshape(tensor, (batch_size, -1, 2, 512)))
-        return tf.transpose(tf.reshape(tensor, (-1, 5000, self.multi_head_count, self.d_h)), [0, 2, 1, 3])
+        return tf.transpose(
+            tf.reshape(
+                tensor=tensor,
+                shape=(batch_size, -1, self.multi_head_count, self.d_h)
+                # tensor: (batch_size, seq_len_splited, attention_head_count, d_h)
+            ),
+            [0, 2, 1, 3]
+            # tensor: (batch_size, attention_head_count, seq_len_splited, d_h)
+        )
 
     def concat_head(self, tensor, batch_size):
-        return tf.reshape(tf.transpose(tensor, [0, 2, 1, 3]), (-1, 5000, self.multi_head_count * self.d_h))
+        return tf.reshape(
+            tensor=tf.transpose(tensor, [0, 2, 1, 3]),
+            shape=(batch_size, -1, self.multi_head_count * self.d_h)
+        )
 
 
 class PositionWiseFeedForward(tf.keras.layers.Layer):
@@ -100,7 +118,7 @@ class PositionWiseFeedForward(tf.keras.layers.Layer):
         out = self.linear1(input)
         out = self.relu(out)
         out = self.linear2(out)
-        return out + input
+        return tf.add(input, out)
 
 
 class Encoder(tf.keras.layers.Layer):
@@ -145,15 +163,18 @@ class Transformer(tf.keras.Model):
         self.linear1 = tf.keras.layers.Dense(256, activation='tanh')
         self.linear2 = tf.keras.layers.Dense(1, activation='sigmoid')
 
+    @tf.function
     def make_mask(self, input_):
-        print('-'*50, input_.shape)
         input = input_[:, 1:]
-        sen_len = input_[:, 1]
-        mask = []
-        for i in range(self.batch_size):
-            mask.append([0. if j < sen_len[i] else 1. for j in range(5000)])
-        mask = np.array(mask)
-        return input, mask
+        mask = tf.cast(tf.math.equal(input, 0.), dtype=tf.float32)
+        # sen_len = input_[:, 1]
+        # mask = []
+        # for i in range(self.batch_size):
+        #     mask.append([0. if j < sen_len[i] else 1. for j in range(5000)])
+        # mask = np.array(mask)
+        print(mask[:, tf.newaxis, tf.newaxis, :])
+        # mask = tf.convert_to_tensor(mask, dtype=tf.float32)
+        return input, mask[:, tf.newaxis, tf.newaxis, :]
 
     def call(self, input_, training=True):
         input, mask = self.make_mask(input_)
@@ -161,6 +182,7 @@ class Transformer(tf.keras.Model):
         # print('*' * 50, encoder_tensor.shape)
         # print(tf.reshape(encoder_tensor, (-1, 5000, 2, 512)))
         encoder_tensor = self.encoder_embedding_dropout(encoder_tensor)
+        print('encoder embedding shape ... ', encoder_tensor)
         for i in range(len(self.encoder_layers)):
             encoder_tensor = self.encoder_layers[i](encoder_tensor, mask, training=training)
         encoder_tensor = self.linear1(encoder_tensor)
