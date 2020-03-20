@@ -42,8 +42,8 @@ class ScaledDotProductAction(tf.keras.layers.Layer):
 
     def call(self, query, value, key, mask=None):
         query_matmul_key = tf.matmul(query, key, transpose_b=True)
-        print('scaled dot product attention query shape ... ', query)
-        print('scaled dot product attention query matmul key shape ... ', query_matmul_key)
+        # print('scaled dot product attention query shape ... ', query)
+        # print('scaled dot product attention query matmul key shape ... ', query_matmul_key)
         scale = tf.sqrt(tf.cast(self.d_h, tf.float32))
         scaled_attention_score = query_matmul_key / scale
         if mask is not None:
@@ -70,14 +70,14 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self.linear = tf.keras.layers.Dense(d_model)
 
     def call(self, query, key, value, mask=None):
-        print('multi-head attention query shape ... ', query)
+        # print('multi-head attention query shape ... ', query)
         query = self.linear_q(query)
         key = self.linear_k(key)
         value = self.linear_v(value)
-        batch_size = np.shape(query)[0]
+        batch_size = tf.shape(query)[0]
 
-        print('multi-head attention split query shape ... ', query)
-        print('multi-head attention mask shape ... ', mask)
+        # print('multi-head attention split query shape ... ', query)
+        # print('multi-head attention mask shape ... ', mask)
 
         query = self.split_head(query, batch_size)
         key = self.split_head(key, batch_size)
@@ -88,7 +88,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         return self.linear(out)
 
     def split_head(self, tensor, batch_size):
-        print('multi-head attention split head tensor ... ', tensor)
+        # print('multi-head attention split head tensor ... ', tensor)
         # print(tf.reshape(tensor, (batch_size, -1, 2, 512)))
         return tf.transpose(
             tf.reshape(
@@ -172,17 +172,17 @@ class Transformer(tf.keras.Model):
         # for i in range(self.batch_size):
         #     mask.append([0. if j < sen_len[i] else 1. for j in range(5000)])
         # mask = np.array(mask)
-        print(mask[:, tf.newaxis, tf.newaxis, :])
+        # print(mask[:, tf.newaxis, tf.newaxis, :])
         # mask = tf.convert_to_tensor(mask, dtype=tf.float32)
         return input, mask[:, tf.newaxis, tf.newaxis, :]
 
     def call(self, input_, training=True):
         input, mask = self.make_mask(input_)
         encoder_tensor = self.encoder_embedding_layer(input)
-        # print('*' * 50, encoder_tensor.shape)
-        # print(tf.reshape(encoder_tensor, (-1, 5000, 2, 512)))
+        # print('transformer input shape ... ' * 50, encoder_tensor)
+        # print(tf.reshape(encoder_tensor, (None, -1, 2, 256)))
         encoder_tensor = self.encoder_embedding_dropout(encoder_tensor)
-        print('encoder embedding shape ... ', encoder_tensor)
+        # print('encoder embedding shape ... ', encoder_tensor)
         for i in range(len(self.encoder_layers)):
             encoder_tensor = self.encoder_layers[i](encoder_tensor, mask, training=training)
         encoder_tensor = self.linear1(encoder_tensor)
