@@ -12,7 +12,9 @@ import jieba
 import re
 import os
 
-# jieba.load_userdict('/home/peihongyue/project/python/dl/data/bc/drug')
+import data_augmentation as da
+
+jieba.load_userdict('/home/peihongyue/project/python/dl/data/bc/drug')
 
 
 def text_clean(string):
@@ -71,9 +73,15 @@ def save(path, data_list):
             f.write(data + '\n')
 
 
+def data_augmentation():
+    pass
+
+
+
 if __name__ == '__main__':
-    # path = '/home/peihongyue/project/python/dl/data/bc/bc.csv'
-    # origin_data = read_file(path)
+    path = '/home/peihongyue/project/python/dl/data/bc/bc.csv'
+    origin_data = read_file(path)
+    # print(origin_data[0])
     # wordIdx = word2idx(origin_data)
     # sentenceIdx = sentence2idx(origin_data, wordIdx)
     # train, test = train_test_split(sentenceIdx, test_size=0.3)

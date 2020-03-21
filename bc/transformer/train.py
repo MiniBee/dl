@@ -50,8 +50,8 @@ def load_data(path):
 
 
 if __name__ == '__main__':
-    x_train, y_train = load_data(os.path.join(os.getcwd() + '/../../data/bc/trainVec'))
-    x_test, y_test = load_data(os.path.join(os.getcwd() + '/../../data/bc/testVec'))
+    x_train, y_train = load_data(os.path.join(os.getcwd() + '/trainVec'))
+    x_test, y_test = load_data(os.path.join(os.getcwd() + '/testVec'))
     # input_vocat_size, encoder_count, attention_head_count, d_model, d_point_wise_ff, dropout_prob
     # train_loss = tf.keras.metrics.BinaryCrossentropy('train_loss', dtype=tf.float32)
     # train_accuracy = tf.keras.metrics.BinaryAccuracy('train_accuracy')
