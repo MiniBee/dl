@@ -11,11 +11,11 @@ import tensorflow as tf
 import time
 import numpy as np
 
-D_MODEL = 512
-D_POINT_WISE_FF = 2048
+D_MODEL = 256
+D_POINT_WISE_FF = 512
 ENCODER_COUNT = 1
-EPOCHS = 5
-ATTENTION_HEAD_COUNT = 2
+EPOCHS = 20
+ATTENTION_HEAD_COUNT = 8
 DROPOUT_PROB = 0.1
 BATCH_SIZE = 2
 BPE_VOCAB_SIZE = 7494
@@ -42,8 +42,8 @@ def load_data(path):
             i = line.split(',')
             i = [float(a.strip()) for a in i]
             # i = [len(i)] + i
-            if len(i) < 5001:
-                i += [0.] * (5001 - len(i) + 1)
+            if len(i) < 4001:
+                i += [0.] * (4001 - len(i) + 1)
             x_train.append(i[1:])
             y_train.append(i[0])
     return np.array(x_train), np.array(y_train)
