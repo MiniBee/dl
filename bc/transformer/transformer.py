@@ -140,6 +140,7 @@ class Encoder(tf.keras.layers.Layer):
         out = self.multi_head_attention(x, x, x, mask)
         out = self.dropout1(out, training=training)
         out = tf.add(x, out)
+        print('encoder 143 out shape ', out)
         out = self.layer_norm1(out)
         out = self.position_wise_fead_forward_layer(out)
         out = self.dropout2(out)
@@ -160,6 +161,7 @@ class Transformer(tf.keras.Model):
         self.encoder_embedding_layer = PositionEncoding(input_vocat_size, self.d_model)
         self.encoder_embedding_dropout = tf.keras.layers.Dropout(dropout_prob)
         self.encoder_layers = [Encoder(attention_head_count, d_model, d_point_wise_ff, dropout_prob) for _ in range(encoder_count)]
+        self.flatten = tf.keras.layers.Flatten()
         self.linear1 = tf.keras.layers.Dense(256, activation='tanh')
         self.linear2 = tf.keras.layers.Dense(1, activation='sigmoid')
 
@@ -185,6 +187,7 @@ class Transformer(tf.keras.Model):
         # print('encoder embedding shape ... ', encoder_tensor)
         for i in range(len(self.encoder_layers)):
             encoder_tensor = self.encoder_layers[i](encoder_tensor, mask, training=training)
+        encoder_tensor = self.flatten(encoder_tensor)
         encoder_tensor = self.linear1(encoder_tensor)
         return self.linear2(encoder_tensor)
 
