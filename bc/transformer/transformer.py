@@ -136,6 +136,7 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout2 = tf.keras.layers.Dropout(dropout_prob)
         self.layer_norm2 = tf.keras.layers.LayerNormalization()
 
+
     def call(self, x, mask=None, training=True):
         out = self.multi_head_attention(x, x, x, mask)
         out = self.dropout1(out, training=training)

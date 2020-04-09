@@ -67,7 +67,7 @@ def cut_sen(content, dict_path, save):
                 tokens_cut.append(line.split('@_@'))
     data_flow.getWordFrequency(tokens_cut)
     print(tokens_cut[:3])
-    _word2vec(tokens_cut)
+    # _word2vec(tokens_cut)
 
 
 def main(contect):
