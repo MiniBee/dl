@@ -45,7 +45,8 @@ def get_data(path):
 
 
 def pre_bc():
-    file_path = '/Users/peihongyue/phy/project/dl/data/bc/'
+    # file_path = '/Users/peihongyue/phy/project/dl/data/bc/'
+    file_path = '/home/peihongyue/project/python/dl/data/bc/'
     data = pd.read_csv(file_path + 'bc.csv')
     data = data.fillna('')
     data['text'] = data.apply(lambda x: x['现病史（最近一次乳腺癌住院病历，后同）'] + x['诊疗过程描述'], axis=1)
@@ -55,7 +56,7 @@ def pre_bc():
     target_list = data['target'].tolist()
 
     content_word_list = word2idx.tokens(content_list)
-    word_idx = word2idx.word_set(content_word_list)
+    word_idx = word2idx.word_set(content_word_list, file_path + 'bc_word.idx')
     content_idx = word2idx.word2idx(content_word_list, word_idx)
     x_train, x_test, y_train, y_test = train_test_split(content_idx, target_list, test_size=0.3)
     target_contect_list = []
