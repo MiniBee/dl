@@ -6,8 +6,9 @@
 #@Software: PyCharm
 
 import sys
-sys.path.append('/home/peihongyue/project/python/dl/')
-from nlp_util.word2idx import word2idx
+# sys.path.append('/home/peihongyue/project/python/dl/')
+sys.path.append('/Users/peihongyue/project/python/dl/')
+from nlp_util import word2idx
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -24,12 +25,12 @@ def split_data():
     target_contect_list = []
     for i, line in enumerate(x_train):
         target_contect_list.append([y_train[i]] + x_train[i])
-    word2idx.save_list(target_contect_list, '/home/peihongyue/project/python/dl/data/has_ae_train.csv')
+    word2idx.save_list(target_contect_list, '/home/peihongyue/project/python/dl/data/bc_train.csv')
 
     target_contect_list = []
     for i, line in enumerate(x_test):
         target_contect_list.append([y_test[i]] + x_test[i])
-    word2idx.save_list(target_contect_list, '/home/peihongyue/project/python/dl/data/has_ae_test.csv')
+    word2idx.save_list(target_contect_list, '/home/peihongyue/project/python/dl/data/bc_test.csv')
 
 
 def get_data(path):
@@ -43,6 +44,30 @@ def get_data(path):
     return x, y
 
 
+def pre_bc():
+    file_path = '/Users/peihongyue/phy/project/dl/data/bc/'
+    data = pd.read_csv(file_path + 'bc.csv')
+    data = data.fillna('')
+    data['text'] = data.apply(lambda x: x['现病史（最近一次乳腺癌住院病历，后同）'] + x['诊疗过程描述'], axis=1)
+    data['target'] = data['几线治疗'].apply(lambda x: 1 if x == '3' or x == 3 else 0)
+
+    content_list = data['text'].tolist()
+    target_list = data['target'].tolist()
+
+    content_word_list = word2idx.tokens(content_list)
+    word_idx = word2idx.word_set(content_word_list)
+    content_idx = word2idx.word2idx(content_word_list, word_idx)
+    x_train, x_test, y_train, y_test = train_test_split(content_idx, target_list, test_size=0.3)
+    target_contect_list = []
+    for i, line in enumerate(x_train):
+        target_contect_list.append([y_train[i]] + x_train[i])
+    word2idx.save_list(target_contect_list, file_path + '/bc_train.csv')
+
+    target_contect_list = []
+    for i, line in enumerate(x_test):
+        target_contect_list.append([y_test[i]] + x_test[i])
+    word2idx.save_list(target_contect_list, file_path + '/bc_test.csv')
+
 
 if __name__ == '__main__':
-    split_data()
+    pre_bc()
