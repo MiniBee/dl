@@ -44,9 +44,23 @@ def get_data(path):
     return x, y
 
 
+def get_sentece_word(path, sentence_split_key, word_split_key, max_sentence, max_word):
+    x = []
+    y = []
+    with open(path) as f:
+        for line in f:
+            sentence_list = line.replace('\n', '').split(sentence_split_key)
+            for i, sentence in enumerate(sentence_list):
+                if i > max_sentence:
+                    break
+                word_list = sentence.split(word_split_key)
+                for j, word in enumerate(word_list):
+                    pass
+
+
 def pre_bc():
-    # file_path = '/Users/peihongyue/phy/project/dl/data/bc/'
-    file_path = '/home/peihongyue/project/python/dl/data/bc/'
+    file_path = '/Users/peihongyue/phy/project/dl/data/bc/'
+    # file_path = '/home/peihongyue/project/python/dl/data/bc/'
     data = pd.read_csv(file_path + 'bc.csv')
     data = data.fillna('')
     data['text'] = data.apply(lambda x: x['现病史（最近一次乳腺癌住院病历，后同）'] + x['诊疗过程描述'], axis=1)
