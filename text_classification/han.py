@@ -8,6 +8,7 @@
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
+from tensorflow.keras import regularizers
 import pandas as pd
 import jieba
 import json
@@ -19,6 +20,13 @@ import numpy as np
 from nlp_util import data_flow
 from nlp_util import pre_process
 # print(tf.__version__)
+
+try:
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+except:
+    pass
 
 
 # text = ['she is a good student', 'xiaoming is good at basketball', 'he is Chinese']
@@ -38,6 +46,19 @@ def load_data():
     data['target'] = data['几线治疗'].apply(lambda x: 1 if x == '3' or x == 3 else 0)
     return data
 
+
+def print3d(d3_array):
+    for segment in d3_array:
+        for i, sentence in enumerate(segment):
+            print('sentence ' + str(i+1))
+            print('$'.join([str(j) for j in sentence]))
+
+
+def print2d(d2_array):
+    for i, sentence in enumerate(d2_array):
+        print('sentence ' + str(i+1))
+        print('$'.join([str(j) for j in sentence]))
+                
 
 def get_token(text_list=None):
     if text_list:
@@ -73,49 +94,179 @@ class HierarchicalAttentionNetwork(tf.keras.layers.Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[-1]
 
+    def get_config():
+        config = {"attention_dim":self.attention_dim}
+        base_config = super(Mylayer, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
-def han_model(x_train, y_train, x_test, y_test):
-    # sentence_encoder = tf.keras.Sequential([
-    input1 = tf.keras.layers.Input(shape=(100,))
-    a = tf.keras.layers.Embedding(9041, 512)(input1)
-    a = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(100, return_sequences=True))(a)
-    han1 = HierarchicalAttentionNetwork(100)
-    a1 = han1(a)
-    m1 = tf.keras.Model(input1, a1)
-    m1.summary()
-    # ])
-    # model = tf.keras.Sequential([
-    input2 = tf.keras.layers.Input(shape=(20, 100))
-    # print('input2: ', input2)
-    a = tf.keras.layers.TimeDistributed(m1)(input2)
-    # print('a1: ', a)
-    a = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(100, return_sequences=True))(a)
-    # print('a2: ', a)
-    # a = HierarchicalAttentionNetwork(100)(a)
-    han = HierarchicalAttentionNetwork(100)
-    a = han(a)
-    # print('a3: ', a)
-    pred = tf.keras.layers.Dense(1, activation=tf.keras.activations.sigmoid)(a)
-    # print('pred: ', pred)
-    # ])
 
-    model = tf.keras.Model(input2, pred)
-    model.summary()
-    adam = tf.keras.optimizers.Adam(0.001)
-    model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.Recall(), tf.keras.metrics.Precision()])
-    print('x_trian shape: ', x_train.shape)
-    print('y_trian shape: ', y_train.shape)
-    model.fit(x_train[:32], y_train[:32], batch_size=32, epochs=1, validation_data=(x_test, y_test))
+class HAttention(tf.keras.layers.Layer):
+    def __init__(self, regularizer=None, **kwargs):
+        super(HAttention, self).__init__(**kwargs)
+        self.regularizer = regularizer
 
-    layer_model = tf.keras.Model(inputs=model.input, outputs=model.layers[3].output)
-    layer_model2 = tf.keras.Model(inputs=m1.input, outputs=m1.layers[3].output)
+    def build(self, input_shape):
+        self.weight = self.add_weight(name='weight', shape=(input_shape[-1], 1), trainable=True, regularizer=self.regularizer)
+        super(HAttention, self).build(input_shape)
 
-    # sentence_w = layer_model.predict(x_train)
-    # print(sentence_w)
-    # word_w = layer_model2.predict()
-    fn = K.function([input2], [han.weight])
-    sentence_w = fn(x_train)
-    print(sentence_w)
+    def call(self, inputs):
+        attention_in = K.exp(K.squeeze(K.dot(inputs, self.weight), axis=-1))
+        attention = attention_in/K.expand_dims(K.sum(attention_in, axis=-1), -1)
+        weighted_sum = K.batch_dot(K.permute_dimensions(inputs, [0, 2, 1]), attention)
+        return weighted_sum
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0], input_shape[-1]
+
+    def get_config(self):
+        base_config = super(HAttention, self).get_config()
+        return dict(list(base_config.items()))
+
+
+
+class HAN():
+    def __init__(self, max_sentence, max_word):
+        self.max_word = max_word
+        self.max_sentence = max_sentence
+
+    def han_model(self):
+        l2_reg = regularizers.l2(1e-8)
+
+        words = tf.keras.layers.Input(shape=(200,))
+        embedded_words = tf.keras.layers.Embedding(10000, 512)(words)
+        word_encoder1 = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(100, return_sequences=True, kernel_regularizer=l2_reg))(embedded_words)
+        word_encoder2 = tf.keras.layers.Dense(100, activation='tanh', name='dense_word_encoder1', kernel_regularizer=l2_reg)(word_encoder1)
+
+        attention_weighted_words = tf.keras.Model(words, HAttention(name='word_attention', regularizer=l2_reg)(word_encoder2))
+        self.word_attention_model = attention_weighted_words
+        attention_weighted_words.summary()
+
+        sentences = tf.keras.layers.Input(shape=(30, 200))
+        attention_weighted_sentences = tf.keras.layers.TimeDistributed(attention_weighted_words)(sentences)
+        sentence_encoder1 = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(50, return_sequences=True, kernel_regularizer=l2_reg))(attention_weighted_sentences)
+        sentence_encoder2 = tf.keras.layers.Dense(100, activation='tanh', name='dense_sentence_encoder1', kernel_regularizer=l2_reg)(sentence_encoder1)
+        attention_weighted_text = HAttention(name='sentence_attention', regularizer=l2_reg)(sentence_encoder2)
+        predication = tf.keras.layers.Dense(1, activation='sigmoid')(attention_weighted_text)
+
+        model = tf.keras.Model(sentences, predication)
+        model.summary()
+        model.compile(optimizer=tf.keras.optimizers.Adam(0.0004), loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.Recall(), tf.keras.metrics.Precision()])
+        return model
+
+
+    def train(self, x_train, y_train, x_test, y_test):
+        batch_size = 16
+        epochs = 20
+        self.model = self.han_model()
+        self.model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
+
+
+    def text2sentences(self, text):
+        ret = []
+        for sentences in text:
+            for sentence in sentences:
+                ret.append(sentence)
+        return np.array(ret)
+
+
+    def nopad_text(self, text):
+        ret = []
+        for sentences in text:
+            sentence_list = []
+            for words in sentences:
+                if np.sum(words) == 0:
+                    break
+                sentence_list.append(words)
+            if len(sentence_list) == 0:
+                break
+            ret.append(sentence_list)
+        return np.array(ret)
+
+
+    def save_model(self, path1, path2):
+        self.word_attention_model.save(path1)
+        self.model.save(path2)
+
+
+    def load_model(self, path1, path2, custom_objects=None):
+        self.word_attention_model = tf.keras.models.load_model(path1, custom_objects)
+        self.model =  tf.keras.models.load_model(path2, custom_objects)
+
+
+    def get_activations(self, text):
+        sentences_from_text = self.text2sentences(text)
+        word_encoder1_model = tf.keras.Model(inputs=self.word_attention_model.input, outputs = self.word_attention_model.get_layer('dense_word_encoder1').output)
+        word_encoder1 = word_encoder1_model.predict(sentences_from_text)
+
+        nopad_text = [self.nopad_text(i) for i in text]
+
+        word_weights = self.word_attention_model.get_layer('word_attention').get_weights()[0]
+        word_attention = sentences_from_text * np.exp(np.squeeze(np.dot(word_encoder1, word_weights)))
+
+        word_attention = word_attention / np.expand_dims(np.sum(word_attention, -1), -1)
+        nopad_attention = [list(filter(lambda x: x > 0, i)) for i in word_attention]
+
+        # print2d(nopad_attention)
+
+        sentence_encoder1_model = tf.keras.Model(inputs=self.model.input, outputs=self.model.get_layer('dense_sentence_encoder1').output)
+        sentence_encoder1 = sentence_encoder1_model.predict(text)
+
+        sentences_weights = self.model.get_layer('sentence_attention').get_weights()[0]
+        sentences_attention = np.exp(np.squeeze(np.dot(sentence_encoder1, sentences_weights)))
+        sentences_attention = sentences_attention / np.expand_dims(np.sum(sentences_attention, -1), -1)
+        # print2d(sentences_attention)
+
+        activation_map = []
+        i = 0
+        for k, segment in enumerate(text):
+            sentence_att_list = []
+            for j, sentance in enumerate(segment):
+                sentence_att_list.append((sentences_attention[k][j], list(nopad_attention)[i]))
+                i += 1
+            activation_map.append(sentence_att_list)
+        
+        return activation_map
+
+
+
+def get_origin_text(text, idx_path):
+    word_idx = []
+    segment_list = []
+    with open(idx_path) as f:
+        for line in f:
+            word_idx.append(line.strip())
+    for segment in text:
+        sentences = []
+        for sentence in segment:
+            words = []
+            for word in sentence:
+                if word > 0:
+                    words.append(word_idx[int(word) - 1])
+            sentences.append(''.join(words))
+        segment_list.append('。'.join(sentences))
+    return segment_list
+
+
+def get_word_from_idx(idx_path='/home/peihongyue/project/python/dl/data/bc/bc_word.idx'):
+    word_idx = []
+    with open(idx_path) as f:
+        for line in f:
+            word_idx.append(line.strip())
+    return word_idx
+
+
+def text_map_attention(text, activation):
+    article_with_attention = []
+    word_idx = get_word_from_idx()
+    for i, segment in enumerate(activation):  # idx of article
+        sentences_attention = []
+        for j, sentence in enumerate(segment):
+            a = list(filter(lambda x: x > 0, text[i][j]))
+            words_attention = list(zip(sentence[1], [word_idx[int(k) - 1] for k in a]))
+            sentences_attention.append((sentence[0], words_attention))
+        article_with_attention.append(sentences_attention)
+    return article_with_attention
+
 
 
 def load_data(path, max_sentence, max_word):
@@ -141,13 +292,34 @@ def load_data(path, max_sentence, max_word):
 
 
 def main():
-    max_sentence = 20
-    max_word = 100
-    x_train, y_train = load_data('/Users/peihongyue/phy/project/dl/data/bc/bc_train.csv', max_sentence, max_word)
-    x_test, y_test = load_data('/Users/peihongyue/phy/project/dl/data/bc/bc_test.csv', max_sentence, max_word)
+    max_sentence = 30
+    max_word = 200
+    try:
+        x_train, y_train = load_data('/Users/peihongyue/phy/project/dl/data/bc/bc_train.csv', max_sentence, max_word)
+        x_test, y_test = load_data('/Users/peihongyue/phy/project/dl/data/bc/bc_test.csv', max_sentence, max_word)
+    except:
+        x_train, y_train = load_data('/home/peihongyue/project/python/dl/data/bc/bc_train.csv', max_sentence, max_word)
+        x_test, y_test = load_data('/home/peihongyue/project/python/dl/data/bc/bc_test.csv', max_sentence, max_word)
     print('x_train shape: ', x_train.shape)
     print('y_train shape:', y_train.shape)
-    han_model(x_train, y_train, x_test, y_test)
+    han = HAN(max_sentence, max_word)
+    model_path2 = '/home/peihongyue/project/python/dl/data/bc/model/bc2.h5'
+    model_path1 = '/home/peihongyue/project/python/dl/data/bc/model/bc1.h5'
+    
+    # han.train(x_train, y_train, x_test, y_test)
+    # han.save_model(model_path1, model_path2)
+
+    han.load_model(model_path1, model_path2, custom_objects={'HAttention': HAttention})
+
+    activation_map = han.get_activations(x_train)
+    # origin_text_list = get_origin_text(x_train[:2], '/home/peihongyue/project/python/dl/data/bc/bc_word.idx')
+
+    article_with_attention = text_map_attention(x_train, activation_map)
+    for article in article_with_attention:
+        print('-' * 50)
+        for sentence in article:
+            print(sentence)
+    
 
 
 if __name__ == '__main__':
