@@ -19,6 +19,7 @@ import numpy as np
 
 from nlp_util import data_flow
 from nlp_util import pre_process
+from text_classification import attention2excel as a2e
 # print(tf.__version__)
 
 try:
@@ -315,10 +316,12 @@ def main():
     # origin_text_list = get_origin_text(x_train[:2], '/home/peihongyue/project/python/dl/data/bc/bc_word.idx')
 
     article_with_attention = text_map_attention(x_train, activation_map)
-    for article in article_with_attention:
-        print('-' * 50)
-        for sentence in article:
-            print(sentence)
+    # target_value, article_with_attention, excel_path
+    a2e.to_excel(list(y_train), article_with_attention, 'test.xlsx')
+    # for article in article_with_attention:
+    #     print('-' * 50)
+    #     for sentence in article:
+    #         print(sentence)
     
 
 
