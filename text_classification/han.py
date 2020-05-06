@@ -133,7 +133,7 @@ class HAN():
     def han_model(self):
         l2_reg = regularizers.l2(1e-8)
 
-        words = tf.keras.layers.Input(shape=(200,))
+        words = tf.keras.layers.Input(shape=(self.max_word,))
         embedded_words = tf.keras.layers.Embedding(10000, 512)(words)
         word_encoder1 = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(100, return_sequences=True, kernel_regularizer=l2_reg))(embedded_words)
         word_encoder2 = tf.keras.layers.Dense(100, activation='tanh', name='dense_word_encoder1', kernel_regularizer=l2_reg)(word_encoder1)
@@ -142,7 +142,7 @@ class HAN():
         self.word_attention_model = attention_weighted_words
         attention_weighted_words.summary()
 
-        sentences = tf.keras.layers.Input(shape=(30, 200))
+        sentences = tf.keras.layers.Input(shape=(self.max_sentence, self.max_word))
         attention_weighted_sentences = tf.keras.layers.TimeDistributed(attention_weighted_words)(sentences)
         sentence_encoder1 = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(50, return_sequences=True, kernel_regularizer=l2_reg))(attention_weighted_sentences)
         sentence_encoder2 = tf.keras.layers.Dense(100, activation='tanh', name='dense_sentence_encoder1', kernel_regularizer=l2_reg)(sentence_encoder1)
@@ -257,7 +257,7 @@ def get_word_from_idx(idx_path='/home/peihongyue/project/python/dl/data/bc/bc_wo
 
 def text_map_attention(text, activation):
     article_with_attention = []
-    word_idx = get_word_from_idx()
+    word_idx = get_word_from_idx('/home/peihongyue/project/python/dl/data/has_ae_idx.csv')
     for i, segment in enumerate(activation):  # idx of article
         sentences_attention = []
         for j, sentence in enumerate(segment):
@@ -274,48 +274,48 @@ def load_data(path, max_sentence, max_word):
     with open(path) as f:
         for line in f:
             data = np.zeros(shape=(max_sentence, max_word))
-            sentence_list = line.split('$$$3$$$')
+            sentence_list = line.split('$$$1$$$')
             for i, sentence in enumerate(sentence_list):
                 word_list = sentence.split('$$$')
                 if i == 0:
                     y.append(float(word_list[0]))
-                    continue
-                if i - 1 >= max_sentence:
+                    word_list = word_list[1:]
+                if i >= max_sentence:
                     break
                 for j, word in enumerate(word_list):
                     if j >= max_word:
                         break
-                    data[i - 1, j] = float(word)
+                    data[i, j] = float(word)
             x.append(data)
     return np.array(x), np.array(y)
 
 
 def main():
-    max_sentence = 30
-    max_word = 200
+    max_sentence = 50
+    max_word = 100
     try:
-        x_train, y_train = load_data('/Users/peihongyue/phy/project/dl/data/bc/bc_train.csv', max_sentence, max_word)
+        x_train, y_train = load_data('/Users/peihongyue/phy/project/dl/data/has_ae_train.csv', max_sentence, max_word)
         x_test, y_test = load_data('/Users/peihongyue/phy/project/dl/data/bc/bc_test.csv', max_sentence, max_word)
     except:
-        x_train, y_train = load_data('/home/peihongyue/project/python/dl/data/bc/bc_train.csv', max_sentence, max_word)
-        x_test, y_test = load_data('/home/peihongyue/project/python/dl/data/bc/bc_test.csv', max_sentence, max_word)
+        x_train, y_train = load_data('/home/peihongyue/project/python/dl/data/has_ae_train.csv', max_sentence, max_word)
+        x_test, y_test = load_data('/home/peihongyue/project/python/dl/data/has_ae_test.csv', max_sentence, max_word)
     print('x_train shape: ', x_train.shape)
     print('y_train shape:', y_train.shape)
     han = HAN(max_sentence, max_word)
-    model_path2 = '/home/peihongyue/project/python/dl/data/bc/model/bc2.h5'
-    model_path1 = '/home/peihongyue/project/python/dl/data/bc/model/bc1.h5'
+    model_path2 = '/home/peihongyue/project/python/dl/data/has_ae2.h5'
+    model_path1 = '/home/peihongyue/project/python/dl/data/has_ae1.h5'
     
-    # han.train(x_train, y_train, x_test, y_test)
-    # han.save_model(model_path1, model_path2)
+    han.train(x_train, y_train, x_test, y_test)
+    han.save_model(model_path1, model_path2)
 
     han.load_model(model_path1, model_path2, custom_objects={'HAttention': HAttention})
 
     activation_map = han.get_activations(x_train)
     # origin_text_list = get_origin_text(x_train[:2], '/home/peihongyue/project/python/dl/data/bc/bc_word.idx')
-
-    article_with_attention = text_map_attention(x_train, activation_map)
+    x, y = load_data('/home/peihongyue/project/python/dl/data/has_ae_xy.csv', max_sentence, max_word)
+    article_with_attention = text_map_attention(x, activation_map)
     # target_value, article_with_attention, excel_path
-    a2e.to_excel(list(y_train), article_with_attention, 'test.xlsx')
+    a2e.to_excel(list(y), article_with_attention, 'test.xlsx')
     # for article in article_with_attention:
     #     print('-' * 50)
     #     for sentence in article:
