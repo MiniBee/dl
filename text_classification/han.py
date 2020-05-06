@@ -229,7 +229,6 @@ class HAN():
         return activation_map
 
 
-
 def get_origin_text(text, idx_path):
     word_idx = []
     segment_list = []
@@ -267,7 +266,6 @@ def text_map_attention(text, activation):
             sentences_attention.append((sentence[0], words_attention))
         article_with_attention.append(sentences_attention)
     return article_with_attention
-
 
 
 def load_data(path, max_sentence, max_word):
@@ -322,7 +320,6 @@ def main():
     #     print('-' * 50)
     #     for sentence in article:
     #         print(sentence)
-    
 
 
 if __name__ == '__main__':
