@@ -126,13 +126,13 @@ class HAttention(tf.keras.layers.Layer):
 
 
 class HAN():
-    def __init__(self, max_sentence, max_word):
+    def __init__(self, max_sentence, max_word, n_class):
         self.max_word = max_word
         self.max_sentence = max_sentence
+        self.n_class = n_class
 
     def han_model(self):
         l2_reg = regularizers.l2(1e-8)
-
         words = tf.keras.layers.Input(shape=(self.max_word,))
         embedded_words = tf.keras.layers.Embedding(10000, 512)(words)
         word_encoder1 = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(100, return_sequences=True, kernel_regularizer=l2_reg))(embedded_words)
@@ -147,11 +147,17 @@ class HAN():
         sentence_encoder1 = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(50, return_sequences=True, kernel_regularizer=l2_reg))(attention_weighted_sentences)
         sentence_encoder2 = tf.keras.layers.Dense(100, activation='tanh', name='dense_sentence_encoder1', kernel_regularizer=l2_reg)(sentence_encoder1)
         attention_weighted_text = HAttention(name='sentence_attention', regularizer=l2_reg)(sentence_encoder2)
-        predication = tf.keras.layers.Dense(1, activation='sigmoid')(attention_weighted_text)
+        if self.n_class <= 2:
+            predication = tf.keras.layers.Dense(1, activation='sigmoid')(attention_weighted_text)
+        else:
+            predication = tf.keras.layers.Dense(self.n_class, activation='softmax')(attention_weighted_text)
 
         model = tf.keras.Model(sentences, predication)
         model.summary()
-        model.compile(optimizer=tf.keras.optimizers.Adam(0.0004), loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.Recall(), tf.keras.metrics.Precision()])
+        if self.n_class <= 2:
+            model.compile(optimizer=tf.keras.optimizers.Adam(0.0004), loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.Recall(), tf.keras.metrics.Precision()])
+        else:
+            model.compile(optimizer=tf.keras.optimizers.Adam(0.0004), loss='sparse_categorical_crossentropy', metrics=['accuracy', tf.keras.metrics.Recall(), tf.keras.metrics.Precision()])
         return model
 
 
@@ -301,7 +307,7 @@ def main():
         x_test, y_test = load_data('/home/peihongyue/project/python/dl/data/has_ae_test.csv', max_sentence, max_word)
     print('x_train shape: ', x_train.shape)
     print('y_train shape:', y_train.shape)
-    han = HAN(max_sentence, max_word)
+    han = HAN(max_sentence, max_word, 2)
     model_path2 = '/home/peihongyue/project/python/dl/data/has_ae2.h5'
     model_path1 = '/home/peihongyue/project/python/dl/data/has_ae1.h5'
     
