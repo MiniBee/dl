@@ -45,7 +45,9 @@ def word_set(content_list, save_path=None):
 
 def word2idx(content_word_list, word_idx, save_path=None):
     content_word_idx = []
-    for line in content_word_list:
+    for i, line in enumerate(content_word_list):
+        if i % 100 == 0:
+            print('-'*int(i/100))
         temp = []
         for word in line.split(SPLIT_KEY):
             if word in word_idx:
