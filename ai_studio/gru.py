@@ -126,14 +126,14 @@ class Model():
         self.batch_size = batch_size
         self.epochs = epochs
         self.opt = opt
-        self.activation = act
+        self.activation = activation
 
 
     def build_model(self):
         inputs = tf.keras.layers.Input(shape=(self.n_his, 4))
         outputs = tf.keras.layers.GRU(self.hidden_num)(inputs)
         outputs = tf.keras.layers.LayerNormalization()(outputs)
-        outputs = tf.keras.layers.Dense(1, activation=activation)(outputs)
+        outputs = tf.keras.layers.Dense(1, activation=self.activation)(outputs)
         model = tf.keras.Model(inputs, outputs)
         model.compile(loss=self.loss, optimizer=self.opt)
         model.summary()
@@ -171,9 +171,9 @@ if __name__ == '__main__':
     mx, my, iy, dy, y, y_scale, merged_x = data_process1(file_path + '/region_migration.csv', file_path + '/infection.csv', file_path + '/density.csv')
     adam = tf.keras.optimizers.Adam(0.001)
     
-    # mx_train, mx_test, my_train, my_test = train_test_split(mx, my, test_size=0.3)
-    # m1 = Model(N_HIS, 32, 'mse', batch_size=32, epochs=100, opt=adam)
-    # m1.train(mx_train, my_train, mx_test, my_test, file_path + '/best_m1.h5', file_path + '/m1.log')
+    mx_train, mx_test, my_train, my_test = train_test_split(mx, my, test_size=0.3)
+    m1 = Model(N_HIS, 32, 'mse', batch_size=32, epochs=100, opt=adam)
+    m1.train(mx_train, my_train, mx_test, my_test, file_path + '/best_m1.h5', file_path + '/m1.log')
     m1 = tf.keras.models.load_model(file_path + '/best_m1.h5')
 
     mx_train, mx_test, iy_train, iy_test = train_test_split(mx, iy, test_size=0.3)
@@ -182,9 +182,9 @@ if __name__ == '__main__':
     m2.train(mx_train, iy_train, mx_test, iy_test, file_path + '/best_m2.h5', file_path + '/m2.log')
     m2 = tf.keras.models.load_model(file_path + '/best_m2.h5', custom_objects={'rmsle': rmsle})
 
-    # mx_train, mx_test, dy_train, dy_test = train_test_split(mx, dy, test_size=0.3)
-    # m3 = Model(N_HIS, 32, 'mse', batch_size=32, epochs=100, opt=adam)
-    # m3.train(mx_train, dy_train, mx_test, dy_test, file_path + '/best_m3.h5', file_path + '/m3.log')
+    mx_train, mx_test, dy_train, dy_test = train_test_split(mx, dy, test_size=0.3)
+    m3 = Model(N_HIS, 32, 'mse', batch_size=32, epochs=100, opt=adam)
+    m3.train(mx_train, dy_train, mx_test, dy_test, file_path + '/best_m3.h5', file_path + '/m3.log')
     m3 = tf.keras.models.load_model(file_path + '/best_m3.h5')
     
     idx = ['21200615', '21200616', '21200617', '21200618', '21200619', '21200620', '21200621', '21200622', '21200623', '21200624', '21200625', '21200626', '21200627', '21200628', '21200629', '21200630', '21200701', '21200702', '21200703', '21200704', '21200705', '21200706', '21200707', '21200708', '21200709', '21200710', '21200711', '21200712', '21200713', '21200714']
