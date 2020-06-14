@@ -8,6 +8,7 @@
 import pandas as pd
 import jieba
 from collections import Counter
+import numpy as np
 
 SPLIT_KEY = '$$$'
 
@@ -24,10 +25,20 @@ def save_list(content_list, save_path):
 def tokens(content_list, save_path=None):
     tokens_list = []
     for line in content_list:
-        tokens_list.append(SPLIT_KEY.join(list(jieba.cut(line.strip()))))
+        tokens_list.append(SPLIT_KEY.join(
+            filter(lambda x: x not in stop_words('/Users/peihongyue/phy/project/dl/nlp_util/stop_word'), list(jieba.cut(line.strip())))
+                                        ))
     if save_path:
         save_list(tokens_list, save_path)
     return tokens_list
+
+
+def stop_words(path):
+    ret = []
+    with open(path) as f:
+        for word in f:
+            ret.append(word.replace('\n', ''))
+    return ret
 
 
 def word_set(content_list, save_path=None):
@@ -43,12 +54,12 @@ def word_set(content_list, save_path=None):
     return ret
 
 
-def word2idx(content_word_list, word_idx, save_path=None):
+def word2idx(content_word_list, word_idx, label_list, save_path=None):
     content_word_idx = []
     for i, line in enumerate(content_word_list):
         if i % 100 == 0:
             print('-'*int(i/100))
-        temp = []
+        temp = [label_list[i]]
         for word in line.split(SPLIT_KEY):
             if word in word_idx:
                 temp.append(word_idx.index(word) + 1)
@@ -58,6 +69,22 @@ def word2idx(content_word_list, word_idx, save_path=None):
     if save_path:
         save_list(content_word_idx, save_path)
     return content_word_idx
+
+
+def get_date(path, vocab_size):
+    label_list = []
+    comment_list = []
+    with open(path) as f:
+        for line in f:
+            line = line.split(SPLIT_KEY)
+            label_list.append(int(line[0]))
+            if vocab_size:
+                if len(line) < vocab_size + 1:
+                    line += ['0'] * (vocab_size - len(line) + 1)
+                if len(line) > vocab_size + 1:
+                    line = line[1:vocab_size+2]
+            comment_list.append(np.array([int(i.strip()) for i in line[1:]]))
+    return np.array(comment_list), np.array(label_list)
 
 
 if __name__ == '__main__':

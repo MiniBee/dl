@@ -36,19 +36,20 @@ def load_data(path):
 if __name__ == '__main__':
     x_train, y_train = load_data(os.path.join(os.getcwd() + '/../../data/bc/trainVec'))
     x_test, y_test = load_data(os.path.join(os.getcwd() + '/../../data/bc/testVec'))
+    print(x_train.shape)
 
 
-    model = tf.keras.Sequential([
-        tf.keras.layers.Embedding(7494, 512),
-        tf.keras.layers.LSTM(256, return_sequences=True),
-        tf.keras.layers.LSTM(256, return_sequences=True),
-        tf.keras.layers.Dense(32, activation='tanh'),
-        tf.keras.layers.Dense(1, activation='sigmoid')
-    ])
-    model.build(input_shape=(167, 5000))
-    model.summary()
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test))
+    # model = tf.keras.Sequential([
+    #     tf.keras.layers.Embedding(7494, 512),
+    #     tf.keras.layers.LSTM(256, return_sequences=True),
+    #     tf.keras.layers.LSTM(256, return_sequences=True),
+    #     tf.keras.layers.Dense(32, activation='tanh'),
+    #     tf.keras.layers.Dense(1, activation='sigmoid')
+    # ])
+    # model.build(input_shape=(167, 5000))
+    # model.summary()
+    # model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    # model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test))
 
 
 
