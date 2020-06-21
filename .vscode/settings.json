@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/home/peihongyue/anaconda3/bin/python"
+    "python.pythonPath": "/home/peihongyue/anaconda3/bin/python",
+    "editor.fontSize": 17
 }
