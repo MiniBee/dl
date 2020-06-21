@@ -1,4 +1,6 @@
-
+# 电影评论分类
+# -padding 
+# -model.history
 
 import tensorflow as tf 
 import numpy as np 

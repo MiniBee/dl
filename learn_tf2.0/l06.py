@@ -1,3 +1,6 @@
+# RNN 文本生成
+
+
 import tensorflow as tf 
 import numpy as np 
 import os 
@@ -103,6 +106,6 @@ def generate_text(model, start_string):
     model.reset_states()
     for i in range(num_generate):
         predications = model(input_eval)
-        
+
 
 
