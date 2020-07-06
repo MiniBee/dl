@@ -2,7 +2,6 @@
 *.temp
 /vendor
 .project
-*model*
 output/
 data/
 venv/
