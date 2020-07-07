@@ -56,7 +56,7 @@ def read_data(path, num_examples):
 
 
 def tokenize(lang):
-    lang_tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=gConfig['enc_vocab_size'], oov_token=3)
+    lang_tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=gConfig['enc_vocab_size'], oov_token='UNK')
     lang_tokenizer.fit_on_texts(lang)
     tensor = lang_tokenizer.texts_to_sequences(lang)
     tensor = tf.keras.preprocessing.sequence.pad_sequences(tensor, maxlen=max_length_inp, padding='post')
@@ -64,7 +64,7 @@ def tokenize(lang):
 
 
 input_tensor, input_token, target_tensor, target_token = read_data(gConfig['seq_data'], gConfig['max_train_data_size'])
-
+# print(target_token.word_index)
 
 def train():
     print('Preparing data in %s' % gConfig['train_data'])
@@ -95,7 +95,7 @@ def train():
         step_time_total = (time.time() - start_time) / current_steps
         print('训练总步数: {} 每步耗时: {}  最新每步耗时: {} 最新每步loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch, step_loss.numpy()))
         seq2seqModel.checkpoint.save(file_prefix=checkpoint_prefix)
-        print(predict('你在干嘛'))
+        print(predict('晚上吃什么'))
         sys.stdout.flush()
 
 
@@ -117,7 +117,6 @@ def predict(sentence):
         predicted_id = tf.argmax(predictions[0]).numpy()
         if target_token.index_word[predicted_id] == 'end':
             break
-
         result += target_token.index_word[predicted_id] + ' '
         dec_input = tf.expand_dims([predicted_id], 0)
     return result
@@ -133,7 +132,7 @@ if __name__ == '__main__':
     if gConfig['mode'] == 'train':
         train()
     elif gConfig['mode'] == 'test':
-        print(predict('你在干嘛'))
+        print(predict('你吃的什么饭'))
     elif gConfig['mode'] == 'serve':
         print('Serve Usage : >> python3 app.py')
 
