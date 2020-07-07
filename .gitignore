@@ -5,6 +5,7 @@
 output/
 data/
 model
+model_data
 venv/
 sample/
 .idea/

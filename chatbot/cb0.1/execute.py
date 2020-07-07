@@ -14,6 +14,13 @@ import seq2seqModel
 import getConfig
 import io
 
+try:
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+except:
+    pass
+
 
 gConfig = {}
 gConfig = getConfig.get_config()
@@ -45,7 +52,7 @@ def read_data(path, num_examples):
     input_lang, target_lang = create_dateset(path, num_examples)
     input_tensor, input_token = tokenize(input_lang)
     target_tensor, target_token = tokenize(target_lang)
-    return input_tensor, input_token, target_tensor, target_lang
+    return input_tensor, input_token, target_tensor, target_token
 
 
 def tokenize(lang):
@@ -63,7 +70,7 @@ def train():
     print('Preparing data in %s' % gConfig['train_data'])
     steps_per_epoch = len(input_tensor) // gConfig['batch_size']
     print(steps_per_epoch)
-    enc_hidden = seq2seqModel.encoder.initalize_hidden_state()
+    enc_hidden = seq2seqModel.encoder.initialize_hidden_state()
     checkpoint_dir = gConfig['model_data']
     ckpt = tf.io.gfile.listdir(checkpoint_dir)
     if ckpt:
@@ -71,6 +78,7 @@ def train():
         seq2seqModel.checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
     BUFFER_SIZE = len(input_tensor)
     dataset = tf.data.Dataset.from_tensor_slices((input_tensor, target_tensor)).shuffle(BUFFER_SIZE)
+    dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
     checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
     start_time = time.time()
 
@@ -80,14 +88,14 @@ def train():
         for (batch, (inp, targ)) in enumerate(dataset.take(steps_per_epoch)):
             batch_loss = seq2seqModel.train_step(inp, targ, target_token, enc_hidden)
             total_loss += batch_loss
-            print(batch_loss.numpy())
+            # print(batch_loss.numpy())
         step_time_epoch = (time.time() - start_time_epoch) / steps_per_epoch
         step_loss = total_loss / steps_per_epoch
         current_steps = +steps_per_epoch
         step_time_total = (time.time() - start_time) / current_steps
         print('训练总步数: {} 每步耗时: {}  最新每步耗时: {} 最新每步loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch, step_loss.numpy()))
         seq2seqModel.checkpoint.save(file_prefix=checkpoint_prefix)
-
+        print(predict('你在干嘛'))
         sys.stdout.flush()
 
 
@@ -98,7 +106,6 @@ def predict(sentence):
     inputs = [input_token.word_index.get(i, 3) for i in sentence.split(' ')]
     inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs], maxlen=max_length_inp, padding='post')
     inputs = tf.convert_to_tensor(inputs)
-
     result = ''
     hidden = [tf.zeros((1, units))]
     enc_out, enc_hidden = seq2seqModel.encoder(inputs, hidden)
@@ -106,7 +113,7 @@ def predict(sentence):
     dec_hidden = enc_hidden
     dec_input = tf.expand_dims([target_token.word_index['start']], 0)
     for t in range(max_length_tar):
-        predictions, dec_hidden, attention_weights = seq2seqModel.encoder(dec_input, dec_hidden, enc_out)
+        predictions, dec_hidden, attention_weights = seq2seqModel.decoder(dec_input, dec_hidden, enc_out)
         predicted_id = tf.argmax(predictions[0]).numpy()
         if target_token.index_word[predicted_id] == 'end':
             break
@@ -125,6 +132,8 @@ if __name__ == '__main__':
     print('\n>> Mode : %s\n' % (gConfig['mode']))
     if gConfig['mode'] == 'train':
         train()
+    elif gConfig['mode'] == 'test':
+        print(predict('你在干嘛'))
     elif gConfig['mode'] == 'serve':
         print('Serve Usage : >> python3 app.py')
 
