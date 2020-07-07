@@ -14,15 +14,16 @@ class BaseModel(tf.keras.Model):
     def __init__(self, units, vocab_size, embedding_dim):
         super(BaseModel, self).__init__()
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.model = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(units, return_sequences=True, return_state=True))
+        self.model = tf.keras.layers.GRU(units, return_sequences=True, return_state=True)
         self.dropout = tf.keras.layers.Dropout(0.4)
         self.fc = tf.keras.layers.Dense(7, activation='softmax')
 
     def call(self, x):
         x = self.embedding(x)
-        x, _, _ = self.model(x)
+        x, _ = self.model(x)
         x = self.dropout(x)
         x = self.fc(x)
+        print(x)
         return x
 
 
@@ -38,8 +39,10 @@ loss_object = tf.keras.losses.SparseCategoricalCrossentropy()
 
 
 def loss_function(real, pred):
-    loss = loss_object(real, pred)
-    return tf.reduce_mean(loss)
+    loss = 0
+    for i in range(real.shape[0]):
+        loss += loss_object(real[i], pred[i])
+    return loss
 
 
 base_model = BaseModel(units, vocab_size, embedding_dim)
@@ -50,7 +53,6 @@ checkpoint = tf.train.Checkpoint(optimizer=optimizer, base_model=base_model)
 def train_step(inp, tar):
     with tf.GradientTape() as tape:
         predictions = base_model(inp)
-        print(predictions)
         loss = loss_function(tar, predictions)
     variables = base_model.trainable_variables
     gradients = tape.gradient(loss, variables)

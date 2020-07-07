@@ -57,8 +57,8 @@ def train():
         print('当前epoch: {}'.format(str(i + 1)))
         print('训练总步数: {} 每步耗时: {}  最新每步耗时: {} 最新每步loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch, total_loss.numpy()))
         print('=' * 100)
-        gru.checkpoint.save(file_prefix=checkpoint_prefix)
-        print(predict('小明很喜欢吃北京烤鸭'))
+        # gru.checkpoint.save(file_prefix=checkpoint_prefix)
+        # print(predict('小明很喜欢吃北京烤鸭'))
         sys.stdout.flush()
 
 
