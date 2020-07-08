@@ -14,16 +14,17 @@ class BaseModel(tf.keras.Model):
     def __init__(self, units, vocab_size, embedding_dim):
         super(BaseModel, self).__init__()
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.model = tf.keras.layers.GRU(units, return_sequences=True, return_state=True)
+        self.model = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(units, return_sequences=True, return_state=True), merge_mode='sum')
         self.dropout = tf.keras.layers.Dropout(0.4)
-        self.fc = tf.keras.layers.Dense(7, activation='softmax')
+        # self.fc = tf.keras.layers.Dense(7, activation='softmax')
+        self.time_distributed = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(7, activation='softmax'))
 
     def call(self, x):
         x = self.embedding(x)
-        x, _ = self.model(x)
+        x, a, b = self.model(x)
         x = self.dropout(x)
-        x = self.fc(x)
-        print(x)
+        # x = self.fc(x)
+        x = self.time_distributed(x)
         return x
 
 
