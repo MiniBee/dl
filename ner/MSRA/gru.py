@@ -43,7 +43,7 @@ def loss_function(real, pred):
     loss = 0
     for i in range(real.shape[0]):
         loss += loss_object(real[i], pred[i])
-    return loss
+    return tf.reduce_mean(loss)
 
 
 base_model = BaseModel(units, vocab_size, embedding_dim)
