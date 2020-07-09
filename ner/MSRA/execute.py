@@ -24,8 +24,8 @@ batch_size = gConfig['batch_size']
 
 x_array, y_array = data_util.create_data(train_data)
 a_array, b_array = data_util.create_data(test_data)
-x_array, lang_tokenizer = data_util.tokenizer(x_array[:5000], 'UNK', 0)
-y_array = data_util.padding_target(y_array[:5000], gConfig['max_inp'])
+x_array, lang_tokenizer = data_util.tokenizer(x_array, 'UNK', 0)
+y_array = data_util.padding_target(y_array, gConfig['max_inp'])
 y_array = np.expand_dims(y_array, 2)
 print(x_array.shape)
 print(y_array.shape)
@@ -58,8 +58,8 @@ def train():
         print('训练总步数: {} 每步耗时: {}  最新每步耗时: {} 最新每步loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch, total_loss.numpy()))
         print('=' * 100)
         gru.checkpoint.save(file_prefix=checkpoint_prefix)
-        print(predict('小明很喜欢吃北京烤鸭'))
         sys.stdout.flush()
+    
 
 
 def predict(sentence):
@@ -77,8 +77,7 @@ if __name__ == '__main__':
     if gConfig['mode'] == 'train':
         train()
     elif gConfig['mode'] == 'test':
-        predict('小明很喜欢吃北京烤鸭')
-        predict('小明很喜欢吃北京的烤鸭')
+        print(predict('小明住在北京'))
     else:
         print('train or test ... ')
 
