@@ -103,6 +103,7 @@ def create_padding_mask(seq):
     seq = tf.cast(tf.math.equal(seq, 0), tf.float32)
     return seq[:, tf.newaxis, tf.newaxis, :]
 
+
 def create_look_ahead_mask(size):
     mask = 1 - tf.linalg.band_part(tf.ones((size, size)), -1, 0)
     return mask
@@ -138,7 +139,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         x = tf.reshape(x, (batch_size, -1, self.num_heads, self.depth))
         return tf.transpose(x, perm=[0,2,1,3])
     
-    def call(self, v, k, q, mast):
+    def call(self, v, k, q, mask):
         batch_size = tf.shape(q)[0]
 
         q = self.wq(q)
