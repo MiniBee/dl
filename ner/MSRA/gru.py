@@ -16,7 +16,6 @@ class BaseModel(tf.keras.Model):
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
         self.model = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(units, return_sequences=True, return_state=True), merge_mode='sum')
         self.dropout = tf.keras.layers.Dropout(0.4)
-        # self.fc = tf.keras.layers.Dense(7, activation='softmax')
         self.time_distributed = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(7, activation='softmax'))
 
     def call(self, x):

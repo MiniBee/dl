@@ -74,33 +74,6 @@ def get_token(text_list=None):
     return tokenizer
 
 
-class HierarchicalAttentionNetwork(tf.keras.layers.Layer):
-    def __init__(self, attention_dim):
-        super(HierarchicalAttentionNetwork, self).__init__()
-        self.attention_dim = attention_dim
-        self.dense1 = tf.keras.layers.Dense(self.attention_dim)
-        self.activation1 = tf.keras.activations.tanh
-        self.dense2 = tf.keras.layers.Dense(1)
-        self.activation2 = tf.keras.activations.softmax
-
-
-    def call(self, inputs):
-        self.output1 = self.dense1(inputs)
-        output1 = self.activation1(self.output1)
-        output1 = self.dense2(output1)
-        self.weight = self.activation2(output1)
-        output1 = tf.reduce_mean(self.weight * inputs, axis=1)
-        return output1
-
-    def compute_output_shape(self, input_shape):
-        return input_shape[0], input_shape[-1]
-
-    def get_config():
-        config = {"attention_dim":self.attention_dim}
-        base_config = super(Mylayer, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-
 class HAttention(tf.keras.layers.Layer):
     def __init__(self, regularizer=None, **kwargs):
         super(HAttention, self).__init__(**kwargs)
@@ -122,7 +95,6 @@ class HAttention(tf.keras.layers.Layer):
     def get_config(self):
         base_config = super(HAttention, self).get_config()
         return dict(list(base_config.items()))
-
 
 
 class HAN():
@@ -160,13 +132,11 @@ class HAN():
             model.compile(optimizer=tf.keras.optimizers.Adam(0.0004), loss='sparse_categorical_crossentropy', metrics=['accuracy', tf.keras.metrics.Recall(), tf.keras.metrics.Precision()])
         return model
 
-
     def train(self, x_train, y_train, x_test, y_test):
         batch_size = 16
         epochs = 20
         self.model = self.han_model()
         self.model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
-
 
     def text2sentences(self, text):
         ret = []
@@ -174,7 +144,6 @@ class HAN():
             for sentence in sentences:
                 ret.append(sentence)
         return np.array(ret)
-
 
     def nopad_text(self, text):
         ret = []
@@ -189,16 +158,13 @@ class HAN():
             ret.append(sentence_list)
         return np.array(ret)
 
-
     def save_model(self, path1, path2):
         self.word_attention_model.save(path1)
         self.model.save(path2)
 
-
     def load_model(self, path1, path2, custom_objects=None):
         self.word_attention_model = tf.keras.models.load_model(path1, custom_objects)
         self.model =  tf.keras.models.load_model(path2, custom_objects)
-
 
     def get_activations(self, text):
         sentences_from_text = self.text2sentences(text)
