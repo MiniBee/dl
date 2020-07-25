@@ -78,7 +78,7 @@ encoder = Encoder(vocab_inp_size, embedding_dim, units, BATCH_SIZE)
 decoder = Decoder(vocab_tar_size, embedding_dim, units, BATCH_SIZE)
 
 optimizer = tf.keras.optimizers.Adam()
-loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_object = tf.keras.losses.SparseCategoricalCrossentropy()
 
 
 def loss_function(real, pred):
