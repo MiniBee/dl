@@ -30,9 +30,11 @@ class BaseLine():
         self.max_len = max_len
 
     def build_model(self):
-        inputs = tf.keras.layers.Input(shape=(self.max_len, ))
+        inputs = tf.keras.layers.Input(shape=(self.max_len))
         x_tensor = tf.keras.layers.Embedding(self.vocab_size, self.embedding_dim)(inputs)
-        x_tensor = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(self.units, return_sequences=True))(x_tensor)
+        x_tensor = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(self.units))(x_tensor)
+        # print(x_tensor)
+        # x_tensor = tf.keras.layers.LSTM(self.units)(x_tensor)
         outputs = tf.keras.layers.Dense(14, activation='softmax')(x_tensor)
 
         model = tf.keras.Model(inputs, outputs)

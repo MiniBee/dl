@@ -9,6 +9,7 @@
 
 import os
 import numpy as np
+import tensorflow as tf
 
 import get_config
 
@@ -22,17 +23,19 @@ def load_data(path):
             line = line.split('\t')
             y_array.append(int(line[0]))
             x_array.append([int(i) for i in line[1].split(' ')])
-    return np.array(x_array), y_array
+    x_array = tf.keras.preprocessing.sequence.pad_sequences(x_array, maxlen=get_config.get_config()['max_inp'], padding='post')
+    return x_array, np.array(y_array)
 
 
 if __name__ == '__main__':
     p_config = get_config.get_config()
-    train_file = p_config['train_data']
-    x_array, y_array = load_data(train_file)
-    vocab_set = set()
-    for x in x_array:
-        vocab_set = vocab_set | set(x)
-    print(len(vocab_set))
+    print(p_config)
+    # train_file = p_config['train_data']
+    # x_array, y_array = load_data(train_file)
+    # vocab_set = set()
+    # for x in x_array:
+    #     vocab_set = vocab_set | set(x)
+    # print(len(vocab_set))
 
 
 

@@ -17,24 +17,13 @@ import lstm
 import utils
 
 
-def build_model():
-    model = tf.keras.Sequential([
-        tf.keras.layers.Embedding(3000, 1024),
-        tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256, return_sequences=True)),
-        tf.keras.layers.Dense(14, activation='softmax')
-    ])
-    return model
-
-
 optimizer = tf.keras.optimizers.Adam()
 loss_object = tf.keras.losses.SparseCategoricalCrossentropy()
 
 
 def loss_function(real, pred):
-    loss = 0
-    for i in range(real.shape[0]):
-        loss += loss_object(real[i], pred[i])
-    return tf.reduce_mean(loss)
+    loss = loss_object(real, pred)
+    return loss
 
 
 @tf.function
@@ -69,8 +58,10 @@ def train(x_array, y_array, batch_size, epochs, checkpoint, checkpoint_dir, mode
         step_time_epoch = (time.time() - start_time) / steps_per_epoch
         current_steps = +steps_per_epoch
         step_time_total = (time.time() - start_time) / current_steps
+        loss = total_loss / batch_size
         print('当前epoch: {}'.format(str(i + 1)))
-        print('训练总步数: {} 每步耗时: {}  最新每步耗时: {} 最新每步loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch, total_loss.numpy()))
+        print('训练总步数: {} 每步耗时: {}  最新每步耗时: {} 最新每步loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch,
+                                                                      loss.numpy()))
         print('=' * 100)
         checkpoint.save(file_prefix=checkpoint_prefix)
         sys.stdout.flush()
@@ -85,7 +76,7 @@ def predict(inputs, model):
 def train_lstm(x_array, y_array, vocab_size, embedding_dim, units, batch_size, epochs):
     lstm_model = lstm.BaseLine(vocab_size, embedding_dim, units, 128).build_model()
     checkpoint = tf.train.Checkpoint(optimizer=optimizer, lstm_model=lstm_model)
-    train(x_array, y_array, batch_size, epochs, checkpoint, '', lstm_model)
+    train(x_array, y_array, batch_size, epochs, checkpoint, get_config.get_config()['model_data'], lstm_model)
 
 
 if __name__ == '__main__':
@@ -97,7 +88,7 @@ if __name__ == '__main__':
     units = gconf.get('units')
     train_file = gconf['train_data']
     x_array, y_array = utils.load_data(train_file)
-    x_array = tf.keras.preprocessing.sequence.pad_sequences(x_array, maxlen=gconf['max_inp'], padding='post')
-    print(y_array)
+    print(x_array.shape)
+    print(y_array.shape)
     train_lstm(x_array, y_array, vocab_size, embedding_dim, units, batch_size, epochs)
 
