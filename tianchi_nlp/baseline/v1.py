@@ -11,11 +11,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 import numpy as np
 
+try:
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+except:
+    pass
+
 p_config = {'batch_size': 128, 'vocab_size': 8000,
             'embedding_dim': 1024, 'epochs': 2, 'units': 256,
-            'max_inp': 1200, 'train_data': '/data/phy/tianchi_nlp/train_set1.csv',
-            'test_data': '/data/phy/tianchi_nlp/test_a_sample_submit.csv',
-            'model_data': '/data/phy/tianchi_nlp/model/'}
+            'max_inp': 1200, 'train_data': '/home/peihongyue/data/tianchi_nlp/train_set.csv',
+            'test_data': '/home/peihongyue/data/tianchi_nlp/test_a_sample_submit.csv',
+            'model_data': '/home/peihongyue/data/tianchi_nlp/model/'}
 
 
 def load_data(path):
@@ -60,8 +67,8 @@ def load_test(path):
 
 
 if __name__ == '__main__':
-    train_data='/data/phy/tianchi_nlp/train_set.csv'
-    test_data='/data/phy/tianchi_nlp/test_a_sample_submit.csv'
+    train_data='/home/peihongyue/data/tianchi_nlp/train_set.csv'
+    test_data='/home/peihongyue/data/tianchi_nlp/test_a_sample_submit.csv'
     x_array, y_array = load_data(train_data)
     print(x_array.shape)
     print(y_array.shape)
@@ -81,12 +88,12 @@ if __name__ == '__main__':
     print(y_pred)
     print(y_test)
 
-    f1_score(y_pred, y_test, average='macro')
+    print(f1_score(y_pred, y_test, average='macro'))
 
     test_x = load_test(test_data)
     y_pred = model.predict(test_x)
     y_pred = tf.argmax(y_pred, axis=1).numpy()
-    with open('/data/phy/tianchi_nlp/ans1.csv', 'w') as f:
+    with open('/home/peihongyue/data/tianchi_nlp/ans1.csv', 'w') as f:
         f.write('label' + '\n')
         for y in y_pred:
             f.write(str(y) + '\n')
