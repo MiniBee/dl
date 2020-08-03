@@ -13,7 +13,6 @@ import getConfig
 class TextCNN(tf.keras.Model):
     def __init__(self, maxlen, vocab_size, embedding_dim, kernel_sizes=[3,4,5], class_num=1, last_activation='sigmoid'):
         super(TextCNN, self).__init__()
-        self.maxlen = maxlen
         self.vocab_size = vocab_size
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=maxlen)
         self.convs = []
@@ -50,9 +49,7 @@ checkpoint = tf.train.Checkpoint(textcnn=textcnn, optimizer=optimizer)
 manager = tf.train.CheckpointManager(checkpoint, directory='', max_to_keep=5)
 
 def loss_function(real, pred):
-    loss = 0
-    for i in range(real.shape[0]):
-        loss += loss_object(real, pred)
+    loss = loss_object(real, pred)
     return tf.reduce_mean(loss)
 
 
@@ -65,7 +62,7 @@ def train_step(input, target):
     variables = textcnn.trainable_variables
     gradients = tape.gradients(loss, variables)
     optimizer.apply_gradients(zip(gradients, variables))
-    return loss
+    return loss/input.shape[0]
 
 
 if __name__ == '__main__':

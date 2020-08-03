@@ -8,6 +8,7 @@
 
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+import time
 
 import get_config
 
@@ -22,28 +23,52 @@ class_label = {'科技': 0, '股票': 1, '体育': 2, '娱乐': 3, '时政': 4, 
 
 
 # BaseLine
-class BaseLine():
+class BaseLine(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, units, max_len):
-        self.vocab_size = vocab_size
-        self.embedding_dim = embedding_dim
-        self.units = units
-        self.max_len = max_len
+        super(BaseLine, self).__init__()
+        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+        self.lstm = tf.keras.layers.LSTM(units)
+        self.bilstm = tf.keras.layers.Bidirectional(self.lstm)
+        self.dense = tf.keras.layers.Dense(14, activation='softmax')
 
-    def build_model(self):
-        inputs = tf.keras.layers.Input(shape=(self.max_len))
-        x_tensor = tf.keras.layers.Embedding(self.vocab_size, self.embedding_dim)(inputs)
-        x_tensor = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(self.units))(x_tensor)
-        # print(x_tensor)
-        # x_tensor = tf.keras.layers.LSTM(self.units)(x_tensor)
-        outputs = tf.keras.layers.Dense(14, activation='softmax')(x_tensor)
+    def call(self, inputs):
+        x_tensor = self.embedding(inputs)
+        x_tensor = self.bilstm(x_tensor)
+        outputs = self.dense(x_tensor)
+        return outputs
 
-        model = tf.keras.Model(inputs, outputs)
-        model.summary()
-        return model
+
+class TextCNN(tf.keras.Model):
+    def __init__(self, vocab_size, embedding_dim, kernel_size, class_num):
+        super(TextCNN, self).__init__()
+        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+        self.convs = []
+        self.max_pooling = []
+        for k in kernel_size:
+            self.convs.append(tf.keras.layers.Conv1D(2, kernel_size=k))
+            self.max_pooling.append(tf.keras.layers.GlobalMaxPool1D())
+        self.dense = tf.keras.layers.Dense(class_num, activation='softmax')
+
+    def call(self, inputs):
+        inputs = self.embedding(inputs)
+        tensor = []
+        for i, conv in enumerate(self.convs):
+            c = conv(inputs)
+            c = self.max_pooling[i](c)
+            tensor.append(c)
+        inputs = tf.keras.layers.Concatenate()(tensor)
+        outputs = self.dense(inputs)
+        return outputs
+
+
+class Han(tf.keras.Model):
+    pass
 
 
 if __name__ == '__main__':
-    BaseLine(2000, 1024, 256, 128).build_model()
+    pass
+
+
 
 
 

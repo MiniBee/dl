@@ -15,15 +15,7 @@ import tensorflow as tf
 # epochs = gConfig['epochs']
 
 
-from cloudia import Cloudia
-text1 = "text data..."
-text2 = "text data..."
 
-# from str
-Cloudia(text1).plot()
-
-# from list
-Cloudia([text1, text2]).plot()
 
 
 

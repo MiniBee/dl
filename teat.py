@@ -7,17 +7,20 @@
 # @desc:
 
 
-def find_pairs(array, k):
-    res = []
-    array.sort()
-    left, right = 0, len(array) - 1
-    while left < right:
-        while right > 1 and array[right] == array[right-1]:
-            right -= 1
-        while left < len(array) - 1 and array[left] == array[left + 1]:
-            left += 1
-        if array[right] - array[left] == k:
-            res.append((array[left], array[right]))
+def selectionSort(arr):
+    for i in range(len(arr) - 1):
+        min_idx = i
+        for j in range(i+1, len(arr)):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        if i != min_idx:
+            arr[i], arr[min_idx] = arr[min_idx], arr[i]
+    return arr
+
+
+if __name__ == '__main__':
+    print(selectionSort([1,3,2,5,8,7,5]))
+
 
 
 
