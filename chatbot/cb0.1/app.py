@@ -6,7 +6,7 @@
 # @time: 2020/7/6 下午6:11
 # @desc:
 
-from flask import Flask, render_template, request, jsonify
+from flask_api import Flask, render_template, request, jsonify
 # import execute
 import time
 import threading
