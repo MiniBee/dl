@@ -9,6 +9,7 @@
 
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score
 import os
 import time
 import sys
@@ -19,24 +20,9 @@ import lstm
 import utils
 
 
-optimizer = tf.keras.optimizers.Adam()
+optimizer = tf.keras.optimizers.Adam(0.01)
 loss_object = tf.keras.losses.SparseCategoricalCrossentropy()
 
-
-def loss_function(real, pred):
-    loss = loss_object(real, pred)
-    return loss
-
-
-@tf.function
-def train_step(base_model, inp, tar):
-    with tf.GradientTape() as tape:
-        predictions = base_model(inp)
-        loss = loss_function(tar, predictions)
-    variables = base_model.trainable_variables
-    gradients = tape.gradient(loss, variables)
-    optimizer.apply_gradients(zip(gradients, variables))
-    return loss
 
 gconf = get_config.get_config()
 def train(x_array, y_array, batch_size, epochs, checkpoint, checkpoint_dir, model):
@@ -86,10 +72,32 @@ def loss_function(real, pred):
     return loss
 
 
-def val_loss(x_test, y_test, model):
-    y_pred = model(x_test)
-    return loss_function(y_test, y_pred)
+def val_loss(x_test, y_test, model, steps_per_epoch):
+    total_loss = 0
+    dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+    score = 0
+    dataset = dataset.batch(1000, drop_remainder=True)
+    for (batch, (x, y)) in enumerate(dataset.take(steps_per_epoch)):
+            y_pred = model(x)
+            batch_loss = loss_function(y, y_pred)
+            total_loss += batch_loss
+            score += score_f1(y_pred, y)
+    print('f1 score: ', score / batch)
+    return total_loss / batch
 
+
+def score_f1(y_pred, y_test):
+    y_pred = tf.argmax(y_pred, axis=1).numpy()
+    return f1_score(y_pred, y_test, average='macro')
+
+def load_test(path):
+    x_array = []
+    with open(path) as f:
+        f.readline()
+        for line in f:
+            x_array.append([int(i) for i in line.split(' ')])
+    x_array = tf.keras.preprocessing.sequence.pad_sequences(x_array, maxlen=get_config.get_config()['max_inp'], padding='post')
+    return x_array
 
 if __name__ == '__main__':
     gconf = get_config.get_config()
@@ -122,8 +130,7 @@ if __name__ == '__main__':
         variables = baseline.trainable_variables
         gradients = tape.gradient(loss, variables)
         optimizer.apply_gradients(zip(gradients, variables))
-        return loss / input.shape[0]
-
+        return loss
 
     checkpoint_dir = gconf.get('model_data')
     if gconf.get('retrain') == 1:
@@ -136,26 +143,36 @@ if __name__ == '__main__':
         checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
 
     BUFFER_SIZE = len(x_array)
-    BATCH_SIZE=9
+    BATCH_SIZE=512
     print('-' * 100)
     steps_per_epoch = int(BUFFER_SIZE / BATCH_SIZE)
     dataset = tf.data.Dataset.from_tensor_slices((x_array, y_array)).shuffle(BUFFER_SIZE)
     dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
     checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
     start_time = time.time()
-    for i in range(epochs):
-        start_time_epoch = time.time()
-        total_loss = 0
-        for (batch, (x, y)) in enumerate(dataset.take(steps_per_epoch)):
-            batch_loss = train_step(x, y)
-            total_loss += batch_loss
-            print('Epochs: {} 当前batch{}步loss {:.4f}'.format(str(i + 1), str(batch_size+1), batch_loss.numpy()))
-        step_loss = total_loss / BATCH_SIZE
-        checkpoint.save(file_prefix=checkpoint_prefix)
-        loss_val = val_loss(x_test, y_test, baseline)
-        print('Epochs: {} 训练集最新每步loss {:.4f}'.format(str(i + 1), step_loss.numpy()))
-        print('Epochs: {} 测试集最新每步loss {:.4f}'.format(str(i + 1), loss_val.numpy()))
-    baseline.summary()
+    # for i in range(epochs):
+    #     start_time_epoch = time.time()
+    #     total_loss = 0
+    #     for (batch, (x, y)) in enumerate(dataset.take(steps_per_epoch)):
+    #         batch_loss = train_step(x, y)
+    #         total_loss += batch_loss
+    #         if batch % 100 == 0:
+    #             print('Epochs: {} loss {:.4f}'.format(str(i + 1), batch_loss.numpy()))
+    #     step_loss = total_loss / batch
+    #     checkpoint.save(file_prefix=checkpoint_prefix)
+    #     print('Epochs: {} 训练集最新每步loss {:.4f}'.format(str(i + 1), step_loss.numpy()))
+    #     loss_val = val_loss(x_test, y_test, baseline, steps_per_epoch)
+    #     print('Epochs: {} 测试集最新每步loss {:.4f}'.format(str(i + 1), loss_val.numpy()))
+    # baseline.summary()
+
+    test_data = gconf.get('test_data')
+    test_x = load_test(test_data)
+    y_pred = baseline.predict(test_x)
+    y_pred = tf.argmax(y_pred, axis=1).numpy()
+    with open('/home/peihongyue/data/tianchi_nlp/ans2.csv', 'w') as f:
+        f.write('label' + '\n')
+        for y in y_pred:
+            f.write(str(y) + '\n')
 
 
 
