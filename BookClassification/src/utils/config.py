@@ -19,6 +19,9 @@ test_file = root_path + '/'
 stopWords_file = root_path + '/data/stopwords.txt'
 log_dir = root_path + '/logs/'
 
+is_cuda = False
+device = torch.device('cuda') if is_cuda else torch.device('cpu')
+
 vocab_size = 1000
 embedding_dim = 1024
 max_len = 200
