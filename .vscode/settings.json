@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/peihongyue/anaconda3/bin/python",
+    "python.pythonPath": "/Users/peihongyue/anaconda3/bin/python",
     "editor.fontSize": 17,
     "python.testing.pytestArgs": [
         "nlp1"
