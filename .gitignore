@@ -16,3 +16,4 @@ sample/
 *.meta
 *.pyc
 *.hdf5
+logs/
