@@ -35,7 +35,7 @@ class SingletonMetaClass(type):
 class Embedding(metaclass=SingletonMetaClass):
     def __init__(self):
         self.stopWords = open(root_path + '/data/stopWords_cn.txt', encoding='utf-8').readlines()
-        # self.ae = AutoEncoder(max_len, vocab_size, embedding_dim)
+        self.ae = AutoEncoder(max_len, vocab_size, embedding_dim)
 
     def load_data(self):
         logger.info('load data ... ')
@@ -61,7 +61,7 @@ class Embedding(metaclass=SingletonMetaClass):
 
         logger.info('train fasttext ... ')
 
-        self.fast = models.FastText(self.data['text'].apply(lambda x: x.split(' ')), size=300, window=3, min_count=2, max_vocab_size=50000)
+        # self.fast = models.FastText(self.data['text'].apply(lambda x: x.split(' ')), size=300, window=3, min_count=2, max_vocab_size=50000)
 
         logger.info('train lda ... ')
         # self.id2word = gensim.corpora.Dictionary(self.data.text)
@@ -69,11 +69,11 @@ class Embedding(metaclass=SingletonMetaClass):
         # self.LDAmodel = models.LdaMulticore(corpus=corpus, id2word=self.id2word, num_topics=30)
 
         logger.info('train autoencoder ... ')
-        # self.ae.train(self.data)
+        self.ae.train(self.data, epochs=100)
 
     def saver(self):
         logger.info('save autoencoder model ... ')
-        # self.ae.save()
+        self.ae.save()
 
         logger.info('save tfidf model ... ')
         # joblib.dump(self.tfidf, root_path + '/model/embedding/tfidf')
@@ -96,22 +96,22 @@ class Embedding(metaclass=SingletonMetaClass):
         # self.w2v = models.KeyedVectors.load_word2vec_format(root_path + '/model/embedding/w2v.bin', binary=False)
 
         logger.info('load fasttext model ... ')
-        self.fast = models.KeyedVectors.load_word2vec_format(root_path + '/model/embedding/fast.bin', binary=False)
+        # self.fast = models.KeyedVectors.load_word2vec_format(root_path + '/model/embedding/fast.bin', binary=False)
 
         logger.info('load lda model')
         # self.lda = LdaModel.load(root_path + '/model/embedding/lda')
 
         logger.info('load autoencoder model')
-        # self.ae.load()
+        self.ae.load()
 
 
 if __name__ == '__main__':
     em = Embedding()
-    # em.load_data()
-    # em.trainer()
-    # em.saver()
+    em.load_data()
+    em.trainer()
+    em.saver()
     em.load()
-    print(em.fast.wv)
+    print(em.ae)
 
 
 

@@ -17,6 +17,12 @@ import sys
 sys.path.append(root_path)
 from src.utils.tools import format_data
 
+try:
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+except:
+    pass
 
 class AutoEncoder(object):
     def __init__(self, max_len, vocab_size, embedding_dim):
@@ -48,25 +54,25 @@ class AutoEncoder(object):
         self.encoder.summary()
 
     def train(self, data, epochs=10):
-        self.x, self.tokenizer = format_data(data, self.max_features, self.max_len, shuffle=True)
+        self.x, self.tokenizer = format_data(data, self.embedding_dim, self.max_len, shuffle=True)
         self.model.fit(self.x, self.x, epochs=epochs, batch_size=32)
 
     def save(self):
         # joblib.dump 模型保存
-        joblib.dump(self.tokenizer, root_path + '/model/embedding/tokenizer')
-        self.model.save_weights(root_path + '/model/embedding/autoencoder')
-        self.encoder.save_weights(root_path + '/model/embedding/autoencoder_encoder')
+        joblib.dump(self.tokenizer, root_path + '/model/embedding/tokenizer/')
+        self.model.save_weights(root_path + '/model/embedding/autoencoder/')
+        self.encoder.save_weights(root_path + '/model/embedding/autoencoder_encoder/')
 
     def load(self):
         # joblib.load 模型加载
-        self.tokenizer = joblib.load(root_path + '/model/embedding/tokenizer')
-        self.model.load_weights(root_path + '/model/embedding/autoencoder')
-        self.encoder.load_weights(root_path + '/model/embedding/autoencoder_encoder')
+        self.tokenizer = joblib.load(root_path + '/model/embedding/tokenizer/')
+        self.model.load_weights(root_path + '/model/embedding/autoencoder/')
+        self.encoder.load_weights(root_path + '/model/embedding/autoencoder_encoder/')
 
 
 if __name__ == '__main__':
     autoEncoder = AutoEncoder(100, 10000, 1024)
-    data = pd.read_csv('')
+    data = pd.read_csv(root_path + '/train.csv')
     autoEncoder.train(data, 10)
     autoEncoder.save()
 
