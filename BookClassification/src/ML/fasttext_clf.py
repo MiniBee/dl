@@ -30,6 +30,10 @@ class Fasttext(object):
         if model_path is None:
             self.train_raw_data = pd.read_csv(train_raw_path, ',', names=['label', 'text'])
             self.test_raw_data = pd.read_csv(test_raw_path, ',', names=['label', 'text'])
+            # shuffle
+            self.train_raw_data = self.train_raw_data.sample(frac=1).reset_index(drop=True)
+            self.test_raw_data = self.test_raw_data.sample(frac=1).reset_index(drop=True)
+            # ' ' split text
             self.train_raw_data['text'] = self.train_raw_data['text'].apply(lambda x: ' '.join([w for w in jieba.cut(x) if w not in stopWords]))
             self.test_raw_data['text'] = self.test_raw_data['text'].apply(lambda x: ' '.join([w for w in jieba.cut(x) if w not in stopWords]))
             self.data_process(self.train_raw_data, model_train_file)
