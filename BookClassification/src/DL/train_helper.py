@@ -50,7 +50,28 @@ def train(config, model, train_iter, dev_iter, test_iter):
         print(config.device)
         optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     else:
-        pass
+        print('User AdamW ... ')
+        print(config.device)
+        param_optimizer = list(model.named_parameters())
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [{
+            'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+            'weight_decay': 0.01
+        }, {
+            'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
+            'weight_decay': 0.0
+        }
+        ]
+        optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=config.learning_rate, eps=config.eps)
+    
+    total_batch = 0
+    dev_best_loss = float('inf')
+    last_improve = 0 
+    flag = False
+    for epoch in range(config.num_epochs):
+        print('Epoch {} / {}'.format(epoch + 1, config.num_epochs))
+        for i, (trains, mask, tokens, labels) in tqdm(enumerate(train_iter)):
+            trains = trains.to(config.device)
 
 
 
